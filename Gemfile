@@ -1,7 +1,9 @@
 source "https://rubygems.org/"
 
 # App Stack
+gem "json", "~> 1.8"
 gem "sinatra", "~> 1.4"
+gem "thin", "~> 1.6"
 
 
 group :development do
