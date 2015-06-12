@@ -7,6 +7,6 @@ Vagrant.configure(2) do |config|
 
   config.vm.network "forwarded_port", guest: 4567, host: 4567
 
-  config.vm.provision "shell", inline: "yum -y install multitail vim nano"
+  config.vm.provision "shell", inline: "yum -y install multitail vim nano git"
 
 end
