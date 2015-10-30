@@ -8,3 +8,5 @@
 /vendor/
 *.log
 *.pid
+config.json
+thin.yml
