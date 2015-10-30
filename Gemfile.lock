@@ -49,3 +49,6 @@ DEPENDENCIES
   rerun (~> 0.10)
   sinatra (~> 1.4)
   thin (~> 1.6)
+
+BUNDLED WITH
+   1.10.3
