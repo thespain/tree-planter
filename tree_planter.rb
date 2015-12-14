@@ -7,7 +7,12 @@ config_obj = JSON.parse(File.read((Dir.pwd) + "/config.json"))
 
 get '/' do
   "<h1>Tree Planter</h1>
-   <h2>To use this tool you need to send a post to #{request.url}deploy</h2>"
+   <h2>To use this tool you need to send a post to one of the following:</h2>
+   <ul>
+     <li>#{request.url}deploy</li>
+     <li>#{request.url}gitlab</li>
+     <li>#{request.url}hook-test</li>
+   </ul>"
 end
 
 # Deploys a repository using the default branch
@@ -16,13 +21,29 @@ post '/deploy' do
   logger.info("json payload: #{payload.inspect}")
 
   endpoint    = 'deploy'
-  tree_name   = payload['tree_name']
-  branch_name = ''
-  repo_url    = payload['repo_url']
-  logger.info("endpoint = #{endpoint}")
-  logger.info("tree name = #{tree_name}")
-  logger.info("repo url = #{repo_url}")
-  logger.info("")
+
+  if payload.has_key?("tree_name")
+    tree_name   = payload['tree_name']
+    branch_name = ''
+    repo_url    = payload['repo_url']
+
+    logger.info("endpoint  = #{endpoint}")
+    logger.info("tree name = #{tree_name}")
+    logger.info("repo url  = #{repo_url}")
+    logger.info("")
+  else
+    tree_name    = (payload['repository']['url'].split('/')[-1]).split('.')[0]
+    branch_name  = (payload['ref'].split('/')).drop(2).join('_')
+    repo_url     = payload['repository']['url']
+
+    logger.info("endpoint     = #{endpoint}")
+    logger.info("tree name    = #{tree_name}")
+    logger.info("repo url     = #{repo_url}")
+    logger.info("branch name  = #{branch_name}")
+    logger.info("")
+  end
+
+
 
   deploy_tree(endpoint, tree_name, branch_name, repo_url, config_obj)
 end
@@ -71,17 +92,18 @@ def deploy_tree(endpoint, tree_name, branch_name, repo_url, config_obj)
   base         = config_obj['base_dir']
 
   stream do |body_content|
-    body_content << "endpoint = #{endpoint}\n"
-    body_content << "tree: #{tree_name}\n"
-    body_content << "branch: #{branch_name}\n"
+    body_content << "endpoint: #{endpoint}\n"
+    body_content << "tree:     #{tree_name}\n"
+    body_content << "branch:   #{branch_name}\n"
     body_content << "repo_url: #{repo_url}\n"
-    body_content << "base: #{base}\n"
+    body_content << "base:     #{base}\n"
+    body_content << "\n"
 
-    logger.info("endpoint = #{endpoint}")
-    logger.info("tree: #{tree_name}")
-    logger.info("branch: #{branch_name}")
-    logger.info("repo_url: #{repo_url}")
-    logger.info("base: #{base}")
+    logger.info("endpoint:    #{endpoint}")
+    logger.info("tree:        #{tree_name}")
+    logger.info("branch:      #{branch_name}")
+    logger.info("repo_url:    #{repo_url}")
+    logger.info("base:        #{base}")
 
     if Dir.exists?(base)
       Dir.chdir(base)
@@ -97,7 +119,7 @@ def deploy_tree(endpoint, tree_name, branch_name, repo_url, config_obj)
           repo_path = nil
           abort("Failing... endpoint #{endpoint} unknown")
       end
-      logger.info("repo_path: #{repo_path}")
+      logger.info("repo_path:   #{repo_path}")
 
       if !repo_path.nil?
         repo_exists = Dir.exists?("./#{repo_path}")
