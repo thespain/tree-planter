@@ -59,7 +59,12 @@ end
 # Simply prints the
 post '/hook-test' do
   payload = JSON.parse(request.body.read)
+
+  logger.info('JSON Payload:')
   logger.info("json payload: #{payload.inspect}")
+  logger.info('')
+  logger.info('request.env:')
+  logger.info(JSON.pretty_generate(request.env))
 end
 
 def deploy_tree(endpoint, tree_name, branch_name, repo_url, config_obj)
