@@ -31,7 +31,7 @@ end
 post '/gitlab' do
   payload = JSON.parse(request.body.read)
   logger.info("json payload: #{payload.inspect}")
-  
+
   # Determine event type
   if payload['ref'].split('/')[1].eql? "heads"
     endpoint     = 'gitlab'
@@ -102,7 +102,7 @@ def deploy_tree(endpoint, tree_name, branch_name, repo_url, config_obj)
       end
 
       if repo_exists
-        Dir.chdir(tree_name)
+        Dir.chdir(repo_path)
         deploy_command = "git pull"
       else
         if branch_name.eql? ''
