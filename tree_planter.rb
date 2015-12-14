@@ -36,7 +36,7 @@ post '/gitlab' do
   if payload['ref'].split('/')[1].eql? "heads"
     endpoint     = 'gitlab'
     tree_name    = (payload['repository']['url'].split('/')[-1]).split('.')[0]
-    branch_name  = payload['ref'].split('/')[2]
+    branch_name  = (payload['ref'].split('/')).drop(2).join('_')
     repo_name    = payload['repository']['name']
     repo_url     = payload['repository']['url']
     checkout_sha = payload['checkout_sha']
