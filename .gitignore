@@ -5,8 +5,10 @@
 /coverage/
 /pkg/
 /spec/fixtures/
+/trees/
 /vendor/
 *.log
 *.pid
 config.json
+Passenger.json
 thin.yml

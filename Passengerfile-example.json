@@ -1,0 +1,13 @@
+{
+  // more options available online at
+  // https://www.phusionpassenger.com/library/config/standalone/reference/
+  "address": "0.0.0.0",
+  "port": 4567,
+  "daemonize": true,
+  "log-file": "/home/vagrant/tmp/log/passenger.log",
+  "pid-file": "/home/vagrant/tmp/pids/tree_planter.pid",
+  "instance_registry_dir": "/tmp",
+  "environment": "development",
+  "ruby": "/usr/bin/ruby",
+  "log_level": 3 // 3 = notice, 4 = info
+}
