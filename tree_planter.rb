@@ -7,7 +7,7 @@ class TreePlanter < Sinatra::Base
 
   set :logging, true
 
-  config_obj = JSON.parse(File.read((Dir.pwd) + "/config.json"))
+  config_obj = JSON.parse(File.read((Dir.pwd) + '/config.json'))
 
   get '/' do
     "<h1>Tree Planter</h1>
@@ -26,30 +26,34 @@ class TreePlanter < Sinatra::Base
 
     endpoint    = 'deploy'
 
-    if payload.has_key?("tree_name")
+    if payload.has_key?('tree_name')
       tree_name   = payload['tree_name']
       branch_name = ''
       repo_url    = payload['repo_url']
+      repo_path   = tree_name
 
       logger.info("endpoint  = #{endpoint}")
       logger.info("tree name = #{tree_name}")
       logger.info("repo url  = #{repo_url}")
-      logger.info("")
+      logger.info("repo path = #{repo_path}")
+      logger.info('')
     else
       tree_name    = (payload['repository']['url'].split('/')[-1]).split('.')[0]
-      branch_name  = (payload['ref'].split('/')).drop(2).join('_')
+      branch_name  = (payload['ref'].split('/')).drop(2).join('___')
       repo_url     = payload['repository']['url']
+      repo_path    = tree_name
 
       logger.info("endpoint     = #{endpoint}")
       logger.info("tree name    = #{tree_name}")
       logger.info("repo url     = #{repo_url}")
+      logger.info("repo path    = #{repo_path}")
       logger.info("branch name  = #{branch_name}")
-      logger.info("")
+      logger.info('')
     end
 
 
 
-    deploy_tree(endpoint, tree_name, branch_name, repo_url, config_obj)
+    deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
   end
 
   # Parses the payload from GitLab and deploys a specific branch of a repository.
@@ -58,23 +62,25 @@ class TreePlanter < Sinatra::Base
     logger.info("json payload: #{payload.inspect}")
 
     # Determine event type
-    if payload['ref'].split('/')[1].eql? "heads"
+    if payload['ref'].split('/')[1].eql? 'heads'
       endpoint     = 'gitlab'
       tree_name    = (payload['repository']['url'].split('/')[-1]).split('.')[0]
-      branch_name  = (payload['ref'].split('/')).drop(2).join('_')
+      branch_name  = (payload['ref'].split('/')).drop(2).join('/')
       repo_name    = payload['repository']['name']
+      repo_path    = "#{tree_name}___#{(payload['ref'].split('/')).drop(2).join('___')}"
       repo_url     = payload['repository']['url']
       checkout_sha = payload['checkout_sha']
 
       logger.info("repo name    = #{repo_name}")
       logger.info("repo url     = #{repo_url}")
+      logger.info("repo path    = #{repo_path}")
       logger.info("branch name  = #{branch_name}")
       logger.info("checkout sha = #{checkout_sha}")
-      logger.info("")
+      logger.info('')
+      
+      deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
 
-      deploy_tree(endpoint, tree_name, branch_name, repo_url, config_obj)
-
-    elsif payload['ref'].split('/')[1].eql? "tags"
+    elsif payload['ref'].split('/')[1].eql? 'tags'
       tag_name = payload['ref'].split('/')[2]
       logger.info("tag = #{tag_name}")
     end
@@ -92,49 +98,38 @@ class TreePlanter < Sinatra::Base
     logger.info(JSON.pretty_generate(request.env))
   end
 
-  def deploy_tree(endpoint, tree_name, branch_name, repo_url, config_obj)
+  def deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
     base         = config_obj['base_dir']
 
     stream do |body_content|
-      body_content << "endpoint: #{endpoint}\n"
-      body_content << "tree:     #{tree_name}\n"
-      body_content << "branch:   #{branch_name}\n"
-      body_content << "repo_url: #{repo_url}\n"
-      body_content << "base:     #{base}\n"
+      body_content << "endpoint:  #{endpoint}\n"
+      body_content << "tree:      #{tree_name}\n"
+      body_content << "branch:    #{branch_name}\n"
+      body_content << "repo_url:  #{repo_url}\n"
+      body_content << "repo_path: #{repo_path}\n"
+      body_content << "base:      #{base}\n"
       body_content << "\n"
 
       logger.info("endpoint:    #{endpoint}")
       logger.info("tree:        #{tree_name}")
       logger.info("branch:      #{branch_name}")
       logger.info("repo_url:    #{repo_url}")
+      logger.info("repo_path:   #{repo_path}")
       logger.info("base:        #{base}")
 
       if Dir.exists?(base)
         Dir.chdir(base)
 
-        case endpoint
-          when 'deploy'
-            repo_path = "#{tree_name}"
-
-          when 'gitlab'
-            repo_path =("#{tree_name}_#{branch_name}")
-
-          else
-            repo_path = nil
-            abort("Failing... endpoint #{endpoint} unknown")
-        end
-        logger.info("repo_path:   #{repo_path}")
-
         if !repo_path.nil?
           repo_exists = Dir.exists?("./#{repo_path}")
         else
           repo_exists = nil
-          abort("No repo path was set.")
+          abort('No repo path was set.')
         end
 
         if repo_exists
           Dir.chdir(repo_path)
-          deploy_command = "git pull"
+          deploy_command = 'git pull'
         else
           if branch_name.eql? ''
             deploy_command = "git clone #{repo_url} #{repo_path}"

@@ -17,7 +17,7 @@ Vagrant.configure(2) do |config|
   # Install needed packages, install gems, create config files, & make a place
   # for the deployed repos.
   config.vm.provision "shell", inline: <<-SHELL1
-    yum -y install scl-utils
+    yum -y install scl-utils git
     yum -y install https://www.softwarecollections.org/en/scls/rhscl/httpd24/epel-7-x86_64/download/rhscl-httpd24-epel-7-x86_64.noarch.rpm
     yum -y install httpd24 httpd24-httpd-devel gcc gcc-c++ libcurl-devel zlib-devel ruby-devel
 
@@ -27,7 +27,9 @@ Vagrant.configure(2) do |config|
     cat /vagrant/exmaple-configs/apache/10-tree-planter.conf > /opt/rh/httpd24/root/etc/httpd/conf.d/10-tree-planter.conf
     echo '{ "base_dir": "/vagrant/trees" }' > /vagrant/config.json
 
-    mkdir /vagrant/trees
+    if [ ! -d "/vagrant/trees" ]; then
+      mkdir /vagrant/trees
+    fi
   SHELL1
 
   # Normally you would clone the app into /opt/tree-planter. This simulates that
