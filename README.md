@@ -1,7 +1,8 @@
 # tree-planter
 
 A webhook receiver that is designed to deploy code trees via either a simple
-JSON payload or the payload from a GitLab webhook.
+JSON payload or the payload from a GitLab webhook. Cloned branches can also be
+deleted via a the GitLab webhook.
 
 ## Startup
 
@@ -79,7 +80,7 @@ byproduct of how Sinatra / Rack do their logging.
 
 ## Examples
 
-Triggering via cURL:
+### Triggering via cURL:
 
 ```bash
 # first run
@@ -101,6 +102,40 @@ repo_url: https://github.com/genebean/tree-planter.git
 base: /opt/trees
 Running git pull
 Already up-to-date.
+```
+
+### Example cURL / JSON Syntax
+
+```bash
+# Pull master branch with a GitLab-like payload
+curl -H "Content-Type: application/json" -X POST -d \
+'{"ref":"refs/heads/master", "checkout_sha":"858f1411ecd9d0b7c8f049a98412d1b3dcb68eae", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
+http://localhost/gitlab
+
+# Pull develop branch with a GitLab-like payload
+curl -H "Content-Type: application/json" -X POST -d \
+'{"ref":"refs/heads/develop", "checkout_sha":"858f1411ecd9d0b7c8f049a98412d1b3dcb68eae", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
+http://localhost/gitlab
+
+# Pull feature/parsable_names branch with a GitLab-like payload
+curl -H "Content-Type: application/json" -X POST -d \
+'{"ref":"refs/heads/feature/parsable_names", "checkout_sha":"858f1411ecd9d0b7c8f049a98412d1b3dcb68eae", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
+http://localhost/gitlab
+
+# Pull default branch with a GitLab-like payload
+curl -H "Content-Type: application/json" -X POST -d \
+'{"ref":"refs/heads/master", "checkout_sha":"858f1411ecd9d0b7c8f049a98412d1b3dcb68eae", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
+http://localhost/deploy
+
+# Pull default branch with the tree-planter custom payload
+curl -H "Content-Type: application/json" -X POST -d \
+'{ "tree_name": "tree-planter", "repo_url": "https://github.com/genebean/tree-planter.git" }' \
+http://localhost/deploy
+
+# Delete cloned copy of feature/parsable_names branch with a GitLab-like payload
+curl -H "Content-Type: application/json" -X POST -d \
+'{"ref":"refs/heads/feature/parsable_names", "checkout_sha":"0000000000000000000000000000000000000000", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
+http://localhost/gitlab
 ```
 
 [rvm]: https://rvm.io
