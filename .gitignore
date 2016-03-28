@@ -10,5 +10,6 @@
 *.log
 *.pid
 config.json
+passenger.[0-9]*
 Passenger.json
 thin.yml
