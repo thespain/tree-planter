@@ -21,7 +21,8 @@ Vagrant.configure(2) do |config|
     yum -y install https://www.softwarecollections.org/en/scls/rhscl/httpd24/epel-7-x86_64/download/rhscl-httpd24-epel-7-x86_64.noarch.rpm
     yum -y install httpd24 httpd24-httpd-devel gcc gcc-c++ libcurl-devel zlib-devel ruby-devel
 
-    gem install --no-ri --no-rdoc passenger bundler
+    gem install --no-ri --no-rdoc bundler
+    gem install --no-ri --no-rdoc passenger -v 5.0.22
 
     cat /vagrant/exmaple-configs/apache/passenger.conf > /opt/rh/httpd24/root/etc/httpd/conf.d/passenger.conf
     cat /vagrant/exmaple-configs/apache/10-tree-planter.conf > /opt/rh/httpd24/root/etc/httpd/conf.d/10-tree-planter.conf
