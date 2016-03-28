@@ -104,48 +104,59 @@ class TreePlanter < Sinatra::Base
 
   def delete_branch(endpoint, repo_path, config_obj)
     base = config_obj['base_dir']
+    body_content = ''
 
     if Dir.exists?(base) and Dir.exists?("#{base}/#{repo_path}")
-      stream do |body_content|
-        body_content << "endpoint:  #{endpoint}\n"
-        body_content << "repo_path: #{repo_path}\n"
-        body_content << "base:      #{base}\n"
+      body_content << "endpoint:  #{endpoint}\n"
+      body_content << "repo_path: #{repo_path}\n"
+      body_content << "base:      #{base}\n"
+      body_content << "\n"
+
+      body_content << "Attempting to remove '#{repo_path}' from inside '#{base}'\n"
+      logger.info("Attempting to remove '#{repo_path}' from inside '#{base}'")
+
+      begin
+        Dir.chdir(base)
+        FileUtils.remove_entry_secure(repo_path, force = false)
+      rescue => e
+        logger.info('This exception was thrown:')
+        logger.error(e)
+        body_content << "This exception was thrown:\n"
+        body_content << e.message
         body_content << "\n"
+        status 500
+      end
 
-        body_content << "Attempting to remove '#{repo_path}' from inside '#{base}'\n"
-        logger.info("Attempting to remove '#{repo_path}' from inside '#{base}'")
-
-        begin
-          Dir.chdir(base)
-          FileUtils.remove_entry_secure(repo_path, force = false)
-        rescue => e
-          logger.info('This exception was thrown:')
-          logger.error(e)
-          body_content << "This exception was thrown:\n"
-          body_content << e
-          body_content << "\n"
-          status 500
-        end
-
-        if Dir.exists?("#{base}/#{repo_path}")
-          msg = "Something didn't go right... #{base}/#{repo_path} still exists."
-          logger.error(msg)
-          body_content << "#{msg}\n"
-          status 500
-        else
-          msg = "#{base}/#{repo_path} was successfully deleted."
-          logger.info(msg)
-          body_content << "#{msg}\n"
-        end
+      if Dir.exists?("#{base}/#{repo_path}")
+        msg = "Something didn't go right... #{base}/#{repo_path} still exists."
+        logger.error(msg)
+        body_content << "#{msg}\n"
+        status 500
+      else
+        msg = "#{base}/#{repo_path} was successfully deleted."
+        logger.info(msg)
+        body_content << "#{msg}\n"
       end
     else
-      logger.error('Something went wrong... here is some info from the delete_branch helper:')
+      msg = 'Something went wrong... here is some info from the delete_branch helper:'
+      logger.error(msg)
+      body_content << msg
+
       repo = "#{base}/#{repo_path}"
+
       logger.error("Base: #{base}")
       logger.error("Repo: #{repo_path}")
       logger.error("Base Exists: #{Dir.exists?(base)}")
       logger.error("Repo Exists: #{Dir.exists?(repo)}")
+      body_content << "Base: #{base}"
+      body_content << "Repo: #{repo_path}"
+      body_content << "Base Exists: #{Dir.exists?(base)}"
+      body_content << "Repo Exists: #{Dir.exists?(repo)}"
+
+      status 500
     end
+
+    body body_content
   end
 
   def deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
