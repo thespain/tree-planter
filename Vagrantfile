@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-  config.vm.box = "centos-7-puppet"
+  config.vm.box = "genebean/centos-7-puppet"
 
   if Vagrant.has_plugin?("vagrant-cachier")
     # Configure cached packages to be shared between instances of the same base box.
@@ -40,7 +40,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", path: "vagrant-config-files/passenger-scl.sh"
 
   # Prep the app for use
-  config.vm.provision "shell", inline: "su - vagrant -c 'cd /vagrant; bundle install --jobs=3 --path ~/vendor/bundle --without development'"
+  config.vm.provision "shell", inline: "su - vagrant -c 'cd /vagrant; bundle install --jobs=3 --path ~/vendor/bundle'"
 
   # Fire up the app in Apache
   config.vm.provision "shell", inline: "systemctl restart httpd24-httpd; systemctl enable httpd24-httpd"
