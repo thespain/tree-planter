@@ -70,15 +70,19 @@ class TreePlanter < Sinatra::Base
       repo_path    = "#{tree_name}___#{(payload['ref'].split('/')).drop(2).join('___')}"
       repo_url     = payload['repository']['url']
       checkout_sha = payload['checkout_sha']
+      after        = payload['after']
 
       logger.info("repo name    = #{repo_name}")
       logger.info("repo url     = #{repo_url}")
       logger.info("repo path    = #{repo_path}")
       logger.info("branch name  = #{branch_name}")
       logger.info("checkout sha = #{checkout_sha}")
+      logger.info("after sha    = #{after}")
       logger.info('')
 
-      if checkout_sha.eql? '0000000000000000000000000000000000000000'
+      if checkout_sha.eql? '0000000000000000000000000000000000000000' # old GitLab JSON Payload
+        delete_branch(endpoint, repo_path, config_obj)
+      elsif after.eql? '0000000000000000000000000000000000000000' and checkout_sha.nil? # newer GitLab JSON Payload
         delete_branch(endpoint, repo_path, config_obj)
       else
         deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
