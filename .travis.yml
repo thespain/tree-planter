@@ -1,0 +1,18 @@
+sudo: required
+
+language: ruby
+
+services:
+  - docker
+
+before_install:
+  - mkdir ${TRAVIS_BUILD_DIR}/trees
+  - docker build -t genebean/tree-planter .
+  - docker run -d -p 127.0.0.1:80:80 --name planted_travis -v ${TRAVIS_BUILD_DIR}/trees:/opt/trees genebean/tree-planter
+  - docker ps -a
+
+script:
+  - docker exec planted_travis /bin/sh -c 'bundle exec rake test'
+  - bash test/travisci_test_locally.sh
+  - bash test/travisci_test_running_container.sh
+
