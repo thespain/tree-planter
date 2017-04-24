@@ -24,6 +24,16 @@ master_check=`ls -d ${TRAVIS_BUILD_DIR}/trees/tree-planter___master/ |wc -l`
 
 if [ $master_check -eq 1 ]; then
   echo 'Successfully pulled master'
+
+  echo
+  echo "Testing that pulled files are owned by me (${USER})"
+  ls -ld ${TRAVIS_BUILD_DIR}/trees/
+  ls -ld ${TRAVIS_BUILD_DIR}/trees/tree-planter___master/
+
+  if [ "`stat -c '%U' ${TRAVIS_BUILD_DIR}/trees`" != "`stat -c '%U' ${TRAVIS_BUILD_DIR}/trees/tree-planter___master/`" ]; then
+    echo 'Ownership is not the same on ./trees and ./trees/tree-planter___master'
+    exit 1
+  fi
 else
   echo 'Failed to pull master'
   exit 1

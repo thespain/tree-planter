@@ -1,9 +1,19 @@
 FROM ruby:2.4-slim
-RUN apt-get update -qq && \
-  apt-get install -y --no-install-recommends curl git make gcc ruby-dev && \
-  apt-get clean autoclean && \
-  apt-get autoremove -y && \
-  rm -rf /var/lib/apt /var/lib/dpkg /var/lib/cache /var/lib/log
+ENV GOSU_VERSION 1.10
+RUN apt-get update -qq \
+  && apt-get install -y --no-install-recommends git make gcc ruby-dev wget \
+  && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
+  && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch" \
+  && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc" \
+  && export GNUPGHOME="$(mktemp -d)" \
+  && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+  && gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
+  && rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
+  && chmod +x /usr/local/bin/gosu \
+  && gosu nobody true \
+  && apt-get clean autoclean \
+  && apt-get autoremove -y \
+  && rm -rf /var/lib/apt /var/lib/dpkg /var/lib/cache /var/lib/log
 
 ENV APP_ROOT /var/www/tree-planter
 RUN mkdir -p $APP_ROOT
@@ -13,5 +23,9 @@ RUN bundle install --jobs=3 --without development
 ADD . $APP_ROOT
 COPY config-example.json $APP_ROOT/config.json
 
-EXPOSE 80
-CMD ["bundle", "exec", "passenger", "start", "--port", "80"]
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+EXPOSE 8080
+CMD ["bundle", "exec", "passenger", "start", "--port", "8080"]

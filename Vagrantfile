@@ -21,15 +21,20 @@ Vagrant.configure(2) do |config|
     systemctl start docker
   SHELL1
 
-  # Make sure there is a directory to mount inside the container
-  Dir.mkdir("./trees") unless File.exists?("./trees")
-
   # Prep the app for use
   config.vm.provision "shell", inline: "cd /vagrant; docker build -t genebean/tree-planter ."
   config.vm.provision "shell", inline: "docker images"
 
   # Fire up the app
-  config.vm.provision "shell", inline: "docker run -d -p 80:80 --name planted_vagrant -v /vagrant/trees:/opt/trees genebean/tree-planter"
+  config.vm.provision "shell", inline: "mkdir /home/vagrant/trees; chown vagrant:vagrant /home/vagrant/trees"
+  config.vm.provision "shell", inline: "docker run -d -p 80:8080 --name planted_vagrant -v /home/vagrant/trees:/opt/trees -e LOCAL_USER_ID=`id -u vagrant` genebean/tree-planter"
   config.vm.provision "shell", inline: "docker ps"
   config.vm.provision "shell", inline: "docker exec planted_vagrant /bin/sh -c 'bundle exec rake test'"
+  config.vm.provision "shell",
+    inline: <<-EOF
+      rm -rf /home/vagrant/trees/tree-planter*
+      curl -H "Content-Type: application/json" -X POST -d '{"ref":"refs/heads/master", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' http://localhost:80/gitlab
+      ls -ld /home/vagrant/trees/
+      ls -l /home/vagrant/trees/
+    EOF
 end
