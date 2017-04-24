@@ -26,8 +26,21 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", inline: "docker images"
 
   # Fire up the app
-  config.vm.provision "shell", inline: "mkdir /home/vagrant/trees; chown vagrant:vagrant /home/vagrant/trees"
-  config.vm.provision "shell", inline: "docker run -d -p 80:8080 --name planted_vagrant -v /home/vagrant/trees:/opt/trees -e LOCAL_USER_ID=`id -u vagrant` genebean/tree-planter"
+  config.vm.provision "shell",
+    inline: <<-EOF
+      appuser='vagrant'
+      mkdir /home/${appuser}/trees
+      chown ${appuser}:${appuser} /home/${appuser}/trees
+      mkdir /var/log/tree-planter
+      chown ${appuser}:${appuser} /var/log/tree-planter
+      docker run -d \
+        -p 80:8080 \
+        --name planted_vagrant \
+        -v /home/${appuser}/trees:/opt/trees \
+        -v /var/log/tree-planter:/var/www/tree-planter/log \
+        -e LOCAL_USER_ID=`id -u ${appuser}` \
+        genebean/tree-planter
+    EOF
   config.vm.provision "shell", inline: "docker ps"
   config.vm.provision "shell", inline: "docker exec planted_vagrant /bin/sh -c 'bundle exec rake test'"
   config.vm.provision "shell",

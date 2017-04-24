@@ -1,7 +1,7 @@
 FROM ruby:2.4-slim
 ENV GOSU_VERSION 1.10
 RUN apt-get update -qq \
-  && apt-get install -y --no-install-recommends git make gcc ruby-dev wget \
+  && apt-get install -y --no-install-recommends gcc git make openssh-client ruby-dev wget \
   && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
   && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch" \
   && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc" \
@@ -22,8 +22,13 @@ ADD Gemfile* $APP_ROOT/
 RUN bundle install --jobs=3 --without development
 ADD . $APP_ROOT
 COPY config-example.json $APP_ROOT/config.json
-
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+
+# SSH Setup
+RUN mkdir -p /home/user/.ssh \
+  && printf "Host *\n\tStrictHostKeyChecking no\n" >> /home/user/.ssh/config \
+  && chmod 700 /home/user/.ssh \
+  && chmod 644 /home/user/.ssh/config
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

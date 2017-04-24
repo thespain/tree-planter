@@ -4,6 +4,30 @@ A webhook receiver that is designed to deploy code trees via either a simple
 JSON payload or the payload from a GitLab webhook. Cloned branches can also be
 deleted via a the GitLab webhook.
 
+## Running the container
+
+```bash
+# This example will need to have names and paths updated to fit your setup. 
+appuser='vagrant'
+mkdir /var/log/tree-planter
+chown ${appuser} /var/log/tree-planter
+docker run -d \
+  -p 80:8080 \
+  --name planted_vagrant \
+  -v /home/${appuser}/trees:/opt/trees \
+  -v /var/log/tree-planter:/var/www/tree-planter/log \
+  -e LOCAL_USER_ID=`id -u ${appuser}` \
+  genebean/tree-planter
+
+# If you need to pull repositories using an ssh key then do this as part of your
+# startup proess:
+# Replace /home/vagrant/.ssh/test_id_rsa with the path to your private key
+docker cp /home/vagrant/.ssh/test_id_rsa planted_vagrant:/home/user/.ssh/id_rsa
+docker exec -it planted_vagrant /bin/sh -c 'chown user.user /home/user/.ssh/id_rsa'
+docker exec -it planted_vagrant /bin/sh -c 'chmod 600 /home/user/.ssh/id_rsa'
+```
+
+# UPDATE ME!!!!
 ## Startup
 
 tree-planter is a Ruby application built on Sinatra. When run on a box without
