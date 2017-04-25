@@ -22,30 +22,20 @@ Vagrant.configure(2) do |config|
   SHELL1
 
   # Prep the app for use
-  config.vm.provision "shell", inline: "cd /vagrant; docker build -t genebean/tree-planter ."
-  config.vm.provision "shell", inline: "docker images"
-
-  # Fire up the app
   config.vm.provision "shell",
     inline: <<-EOF
-      appuser='vagrant'
-      mkdir /home/${appuser}/trees
-      chown ${appuser}:${appuser} /home/${appuser}/trees
-      mkdir /var/log/tree-planter
-      chown ${appuser}:${appuser} /var/log/tree-planter
-      docker run -d \
-        -p 80:8080 \
-        --name planted_vagrant \
-        -v /home/${appuser}/trees:/opt/trees \
-        -v /var/log/tree-planter:/var/www/tree-planter/log \
-        -e LOCAL_USER_ID=`id -u ${appuser}` \
-        genebean/tree-planter
+      curl -o /home/vagrant/.ssh/vagrant_priv_key https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant
+      chown vagrant.vagrant /home/vagrant/.ssh/vagrant_priv_key
+      chmod 600 /home/vagrant/.ssh/vagrant_priv_key
     EOF
+  config.vm.provision "shell", inline: "puppet module install garethr-docker --version 5.3.0"
+  config.vm.provision "shell", inline: "puppet apply /vagrant/docker.pp"
   config.vm.provision "shell", inline: "docker ps"
-  config.vm.provision "shell", inline: "docker exec planted_vagrant /bin/sh -c 'bundle exec rake test'"
+  config.vm.provision "shell", inline: "docker exec johnny-appleseed /bin/sh -c 'bundle exec rake test'"
   config.vm.provision "shell",
     inline: <<-EOF
       rm -rf /home/vagrant/trees/tree-planter*
+      curl -H "Content-Type: application/json" -X POST -d '{"ref":"refs/heads/master", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' http://localhost:80/deploy
       curl -H "Content-Type: application/json" -X POST -d '{"ref":"refs/heads/master", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' http://localhost:80/gitlab
       ls -ld /home/vagrant/trees/
       ls -l /home/vagrant/trees/

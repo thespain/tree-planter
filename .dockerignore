@@ -20,5 +20,6 @@ thin*.yml
 Vagrantfile
 *.log
 *.pid
+*.pp
 *.swp
 
