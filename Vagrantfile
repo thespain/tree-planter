@@ -10,6 +10,7 @@ Vagrant.configure(2) do |config|
     config.cache.scope = :box
   end
 
+  config.vm.hostname = 'dockerhost.localdomain'
   config.vm.network "forwarded_port", guest: 80,   host: 8080
 
   # Install needed packages, install gems, create config files, & make a place
