@@ -18,6 +18,7 @@ user { $appuser:
   require          => Group['docker'],
 }
 
+# this is where your git repo(s) will live
 file { "/home/${appuser}/trees":
   ensure   => 'directory',
   group    => $appuser,    # generally the same as your app user
@@ -41,7 +42,7 @@ class { '::docker':
 }
 
 ::docker::image { 'genebean/tree-planter':
-  docker_dir =>  '/vagrant',
+  docker_dir => '/vagrant',
 }
 
 ::docker::run { 'johnny_appleseed':
@@ -61,4 +62,3 @@ class { '::docker':
     File['/var/log/tree-planter'],
   ],
 }
-
