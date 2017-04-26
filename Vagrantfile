@@ -13,14 +13,6 @@ Vagrant.configure(2) do |config|
   config.vm.hostname = 'dockerhost.localdomain'
   config.vm.network "forwarded_port", guest: 80,   host: 8080
 
-  # Install needed packages, install gems, create config files, & make a place
-  # for the deployed repos.
-  config.vm.provision "shell", inline: <<-SHELL1
-    groupadd docker
-    gpasswd -a vagrant docker
-    yum -y install docker
-    systemctl start docker
-  SHELL1
 
   # Prep the app for use
   config.vm.provision "shell",
