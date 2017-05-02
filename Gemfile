@@ -1,15 +1,21 @@
 source "https://rubygems.org/"
 
 # App Stack
-gem "json", "~> 1.8"
-gem "sinatra", "~> 1.4"
+gem "passenger", "~> 5.1"
+gem "sinatra",   "~> 1.4"
 
+if RUBY_VERSION < '2.0'
+  gem 'json', '1.8.3'
+else
+  gem 'json', '~> 2.1'
+end
 
 group :development do
-  gem "passenger", "5.0.22"
-  gem "thin", "~> 1.6"
-  gem "rake", "~> 10.0"
-  gem "minitest", "~> 5.2"
-  gem "rack-test", "~> 0.6"
-  gem "rerun", "~> 0.10"
+
+end
+
+group :test do
+  gem "minitest",           "~> 5.10"
+  gem "minitest-reporters", "~> 1.1"
+  gem "rack-test",          "~> 0.6"
 end
