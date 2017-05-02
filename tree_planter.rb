@@ -108,13 +108,17 @@ class TreePlanter < Sinatra::Base
 
   def delete_branch(endpoint, repo_path, config_obj)
     base = config_obj['base_dir']
+    repo = "#{base}/#{repo_path}"
     body_content = ''
+    body_content << "endpoint:    #{endpoint}\n"
+    body_content << "repo_path:   #{repo_path}\n"
+    body_content << "base:        #{base}\n"
+    body_content << "repo:        #{repo_path}\n"
+    body_content << "base exists: #{Dir.exist?(base)}\n"
+    body_content << "repo exists: #{Dir.exist?(repo)}\n"
+    body_content << "\n"
 
-    if Dir.exists?(base) and Dir.exists?("#{base}/#{repo_path}")
-      body_content << "endpoint:  #{endpoint}\n"
-      body_content << "repo_path: #{repo_path}\n"
-      body_content << "base:      #{base}\n"
-      body_content << "\n"
+    if Dir.exist?(base) and Dir.exist?("#{base}/#{repo_path}")
 
       body_content << "Attempting to remove '#{repo_path}' from inside '#{base}'\n"
       logger.info("Attempting to remove '#{repo_path}' from inside '#{base}'")
@@ -131,7 +135,7 @@ class TreePlanter < Sinatra::Base
         status 500
       end
 
-      if Dir.exists?("#{base}/#{repo_path}")
+      if Dir.exist?("#{base}/#{repo_path}")
         msg = "Something didn't go right... #{base}/#{repo_path} still exists."
         logger.error(msg)
         body_content << "#{msg}\n"
@@ -142,20 +146,15 @@ class TreePlanter < Sinatra::Base
         body_content << "#{msg}\n"
       end
     else
-      msg = 'Something went wrong... here is some info from the delete_branch helper:'
+      msg = 'Unable to delete branch. Either the delete failed or it does not exist locally. Additional info, if avilable, is below:'
       logger.error(msg)
       body_content << msg
-
-      repo = "#{base}/#{repo_path}"
+      body_content << "\n"
 
       logger.error("Base: #{base}")
       logger.error("Repo: #{repo_path}")
-      logger.error("Base Exists: #{Dir.exists?(base)}")
-      logger.error("Repo Exists: #{Dir.exists?(repo)}")
-      body_content << "Base: #{base}"
-      body_content << "Repo: #{repo_path}"
-      body_content << "Base Exists: #{Dir.exists?(base)}"
-      body_content << "Repo Exists: #{Dir.exists?(repo)}"
+      logger.error("Base Exists: #{Dir.exist?(base)}")
+      logger.error("Repo Exists: #{Dir.exist?(repo)}")
 
       status 500
     end
@@ -182,11 +181,11 @@ class TreePlanter < Sinatra::Base
       logger.info("repo_path:   #{repo_path}")
       logger.info("base:        #{base}")
 
-      if Dir.exists?(base)
+      if Dir.exist?(base)
         Dir.chdir(base)
 
         if !repo_path.nil?
-          repo_exists = Dir.exists?("./#{repo_path}")
+          repo_exists = Dir.exist?("./#{repo_path}")
         else
           repo_exists = nil
           abort('No repo path was set.')

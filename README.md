@@ -1,60 +1,210 @@
+[![Build Status][travis-img-master]][travis-ci]
+[![Gemnasium][gemnasium-img]][gemnasium]
+[![security][hakiri-img]][hakiri]
+[![ImageLayers Size][dockerimagesize-img]][dockerimage]
+[![ImageLayers Layers][dockerimagelayers]][dockerimage]
+
+
 # tree-planter
 
-A webhook receiver that is designed to deploy code trees via either a simple
-JSON payload or the payload from a GitLab webhook. Cloned branches can also be
-deleted via a the GitLab webhook.
+tree-planter is a webhook receiver that is designed to deploy code trees via
+either a simple JSON payload or the payload from a GitLab webhook. Cloned
+branches can also be deleted via a the GitLab webhook.
 
-## Startup
+Technology-wise, tree-planter is a Ruby application built on [Sinatra][sinatra].
+The application is served up by the [Passenger][passenger]
+gem. All this has been neatly wrapped up in a Docker container that's based on
+the official [ruby:2.4-slim][ruby:2.4-slim] one which, in turn, is based on
+the official [debian:jessie][debian:jessie] one. A utility called [gosu][gosu]
+is used for the entry point so that the application can run with a specified
+UID.
 
-tree-planter is a Ruby application built on Sinatra. When run on a box without
-a web server it can utilize [Passenger][passenger] in standalone mode or
-[Thin][thin] as its web server.
 
-When run on a box that already has Apache or Nginx it can be run like any other
-Rack application. As such, you may need to setup [RVM][rvm] or similar if you
-don't have a recent Ruby installed.
+## File ownership / permissions
 
-To run tree-planter via [Passenger][passenger] behind Apache you need to have
-Passenger installed and configured. After that, you will need to do the
-following:  
-1. create a user to run the application as  
-2. make a directory such as `/opt/tree-planter` to use as the home of the application  
-3. chown that directory to your application user  
-4. switch to the application user and run  
-   `git clone https://github.com/genebean/tree-planter.git /opt/tree-planter`  
-5. cd into `/opt/tree-planter`  
-6. run `bundle install --deployment --without development test`  
-7. copy `/opt/tree-planterexmaple-configs/apache/10-tree-planter.conf` to your  
-   Apache config directory and edit as needed for your setup.  
-8. Restart Apache  
+If you are deploying a git repository somewhere, and you must be if you are
+looking to use to use tree-planter, then permissions on the downloaded files
+are likely important. This is where [gosu][gosu] comes in. We wil pass in a
+UID when we start up our container and that is who tree-planter will run as.
 
-If you want to use this with one of the Software Collections available for Red
-Hat, CentOS, Fedora, and the like then you can reference the included
-Vagrantfile if you need assistance in setting up Passenger.
 
-To run tree-planter as a standalone daemon you need to:  
-1. switch to the user that you want to own the cloned repos  
-2. Clone https://github.com/genebean/tree-planter.git  
-3. `cd` into the cloned directory  
-4. copy `config-example.json` to `config.json` and update any settings as needed  
-5. If using Passenger: copy `Passengerfile-example.json` to `Passengerfile.json`  
-   and update any settings as needed  
-6. if using Thin: copy `thin-example.yml` to `thin.yml` and update any settings
-   as needed  
-7. grant the user running tree-planter write access to all directories
-   specified in the config files listed above.  
-8. execute the following:
+## Running the container
 
-```bash
-gem update --system
-gem install bundler --no-ri --no-rdoc
-bundle install --jobs=3 --without development
+All the example code below assumes you are using [Puppet][puppet] and the
+[garethr/docker][garethr/docker] module to manage your servers. If that is not
+the case you will still need to account for creating an application user and
+creating init scripts or systemd unit files for starting and stopping the
+container. There are also a couple of directories that need to be created and
+have their ownership set to that of the application user. Now, on with getting
+your instance of tree-planter up and running.
 
-# if using Passenger
-bundle exec passenger start
+Lets step through things and then put it all together in one copy/past friendly
+block farther down the page.
 
-# if using thin
-bundle exec thin -C thin.yml start
+First things first, let create the group that lets other users run Docker
+commands:
+
+```puppet
+group { 'docker':
+  ensure => 'present',
+}
+```
+
+Now lets create an application user. Since development of this
+project is done inside a VM by way of Vagrant our example user is going to be
+named `vagrant`.
+
+```puppet
+$appuser    = 'vagrant'
+$appuseruid = '1000'
+
+user { $appuser:
+  ensure           => 'present',
+  gid              => '1000',
+  groups           => ['wheel', 'docker'],
+  home             => "/home/${appuser}",
+  password         => '$6$eVECWbuT$6PZ6cqTwG11jrwpgB0g1Q5GyV3Y.UvEiXfT/KR3XP8RfHhHvJsp1.zU1H0ljuhFnw39r.HoSQiXm/RxcqCBQ7/',
+  password_max_age => '99999',
+  password_min_age => '0',
+  shell            => '/bin/bash',
+  uid              => $appuseruid,
+  require          => Group['docker'],
+}
+```
+
+A key thing to note in the code above is that the user is in the docker group.
+This lets them run Docker commands without sudo.
+
+Next, lets make the directories needed for this application.
+
+```puppet
+# this is where your git repo(s) will live
+file { "/home/${appuser}/trees":
+  ensure   => 'directory',
+  group    => $appuser,    # generally the same as your app user
+  mode     => '755',       # adjust as needed
+  owner    => $appuser,    # must be your app user
+}
+
+# this is so you can see the logs generated by Sinatra and Passenger
+file { '/var/log/tree-planter':
+  ensure   => 'directory',
+  group    => $appuser,
+  mode     => '755',
+  owner    => $appuser,
+}
+```
+
+Now that our user and directories are in place lets get the container going.
+Details of what the code below does can be found at on the Puppet Forge page
+for [garethr/docker][garethr/docker].
+
+```puppet
+class { '::docker':
+  use_upstream_package_source => false,
+  log_driver                  => 'journald',
+  package_name                => 'docker',
+  service_overrides_template  => false,
+}
+
+::docker::image { 'genebean/tree-planter':
+  image_tag => 'latest',
+}
+
+::docker::run { 'johnny_appleseed':
+  image           => 'genebean/tree-planter',
+  ports           => '80:8080',
+  volumes         => [
+    "/home/${appuser}/.ssh/id_rsa:/home/user/.ssh/id_rsa",
+    "/home/${appuser}/trees:/opt/trees",
+    '/var/log/tree-planter:/var/www/tree-planter/log',
+  ],
+  env             => "LOCAL_USER_ID=${appuseruid}",
+  restart_service => true,
+  privileged      => false,
+  require         => [
+    User[$appuser],
+    File["/home/${appuser}/trees"],
+    File['/var/log/tree-planter'],
+  ],
+}
+```
+
+There are a couple of things from above that I want to pull your attention to:
+* `log_driver => 'journald',` - Explicitly use journald. If you are not using
+  systemd then you will need to adjust this.
+* `ports => '80:8080',` - 80 is the port that will be used on your host.
+* `"/home/${appuser}/.ssh/id_rsa:/home/user/.ssh/id_rsa",` - this is the ssh
+  key that will be used for pulling repositories.
+
+
+### And here it is all together:
+
+```puppet
+$appuser    = 'vagrant'
+$appuseruid = '1000'
+
+group { 'docker':
+  ensure => 'present',
+}
+
+user { $appuser:
+  ensure           => 'present',
+  gid              => '1000',
+  groups           => ['wheel', 'docker'],
+  home             => "/home/${appuser}",
+  password         => '$6$eVECWbuT$6PZ6cqTwG11jrwpgB0g1Q5GyV3Y.UvEiXfT/KR3XP8RfHhHvJsp1.zU1H0ljuhFnw39r.HoSQiXm/RxcqCBQ7/',
+  password_max_age => '99999',
+  password_min_age => '0',
+  shell            => '/bin/bash',
+  uid              => $appuseruid,
+  require          => Group['docker'],
+}
+
+# this is where your git repo(s) will live
+file { "/home/${appuser}/trees":
+  ensure   => 'directory',
+  group    => $appuser,    # generally the same as your app user
+  mode     => '755',       # adjust as needed
+  owner    => $appuser,    # must be your app user
+}
+
+# this is so you can see the logs generated by Sinatra and Passenger
+file { '/var/log/tree-planter':
+  ensure   => 'directory',
+  group    => $appuser,
+  mode     => '755',
+  owner    => $appuser,
+}
+
+class { '::docker':
+  use_upstream_package_source => false,
+  log_driver                  => 'journald',
+  package_name                => 'docker',
+  service_overrides_template  => false,
+}
+
+::docker::image { 'genebean/tree-planter':
+  image_tag => 'latest',
+}
+
+::docker::run { 'johnny_appleseed':
+  image           => 'genebean/tree-planter',
+  ports           => '80:8080',
+  volumes         => [
+    "/home/${appuser}/.ssh/id_rsa:/home/user/.ssh/id_rsa",
+    "/home/${appuser}/trees:/opt/trees",
+    '/var/log/tree-planter:/var/www/tree-planter/log',
+  ],
+  env             => "LOCAL_USER_ID=${appuseruid}",
+  restart_service => true,
+  privileged      => false,
+  require         => [
+    User[$appuser],
+    File["/home/${appuser}/trees"],
+    File['/var/log/tree-planter'],
+  ],
+}
 ```
 
 
@@ -80,10 +230,10 @@ byproduct of how Sinatra / Rack do their logging.
 
 ## Examples
 
-### Triggering via cURL:
+### Triggering the `/deploy` endpoint via cURL:
 
 ```bash
-# first run
+# first run using
 [vagrant@localhost opt]$ curl -H "Content-Type: application/json" -X POST -d \
 '{ "tree_name": "tree-planter", "repo_url": "https://github.com/genebean/tree-planter.git" }' \
 http://localhost:4567/deploy
@@ -93,7 +243,7 @@ base: /opt/trees
 Running git clone https://github.com/genebean/tree-planter.git tree-planter
 Cloning into 'tree-planter'...
 
-# second run
+# second run using the /deploy endpoint
 [vagrant@localhost ~]$ curl -H "Content-Type: application/json" -X POST -d \
 '{ "tree_name": "tree-planter", "repo_url": "https://github.com/genebean/tree-planter.git" }' \
 http://localhost:4567/deploy
@@ -104,40 +254,76 @@ Running git pull
 Already up-to-date.
 ```
 
-### Example cURL / JSON Syntax
+
+### Triggering the `/gitlab` endpoint via cURL with a GitLab-like payload:
 
 ```bash
-# Pull master branch with a GitLab-like payload
+# Pull master branch
 curl -H "Content-Type: application/json" -X POST -d \
 '{"ref":"refs/heads/master", "checkout_sha":"858f1411ecd9d0b7c8f049a98412d1b3dcb68eae", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
 http://localhost/gitlab
 
-# Pull develop branch with a GitLab-like payload
+# Pull develop branch
 curl -H "Content-Type: application/json" -X POST -d \
 '{"ref":"refs/heads/develop", "checkout_sha":"858f1411ecd9d0b7c8f049a98412d1b3dcb68eae", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
 http://localhost/gitlab
 
-# Pull feature/parsable_names branch with a GitLab-like payload
+# Pull feature/parsable_names branch
 curl -H "Content-Type: application/json" -X POST -d \
 '{"ref":"refs/heads/feature/parsable_names", "checkout_sha":"858f1411ecd9d0b7c8f049a98412d1b3dcb68eae", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
 http://localhost/gitlab
+```
 
-# Pull default branch with a GitLab-like payload
+
+### Delete cloned copy of feature/parsable_names branch with a GitLab-like payload
+
+```bash
+# Current style GitLab
+# Note the absence of "checkout_sha" in this one
 curl -H "Content-Type: application/json" -X POST -d \
-'{"ref":"refs/heads/master", "checkout_sha":"858f1411ecd9d0b7c8f049a98412d1b3dcb68eae", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
-http://localhost/deploy
+'{"ref":"refs/heads/feature/parsable_names", "after":"0000000000000000000000000000000000000000", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
+http://localhost/gitlab
 
-# Pull default branch with the tree-planter custom payload
-curl -H "Content-Type: application/json" -X POST -d \
-'{ "tree_name": "tree-planter", "repo_url": "https://github.com/genebean/tree-planter.git" }' \
-http://localhost/deploy
-
-# Delete cloned copy of feature/parsable_names branch with a GitLab-like payload
+# Old style GitLab
 curl -H "Content-Type: application/json" -X POST -d \
 '{"ref":"refs/heads/feature/parsable_names", "checkout_sha":"0000000000000000000000000000000000000000", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
 http://localhost/gitlab
 ```
 
-[rvm]: https://rvm.io
+
+## Development & Testing
+
+The repository contains a Vagrantfile that will allow you to fire up a CentOS 7
+box that contains the Puppet agent. It builds and deploys the Docker image using
+the tools documented above. After it is up you can talk to the container in
+four ways:
+
+1. Run `curl` commands from inside the Vagrant box targeted at http://localhost
+2. Run `curl` or a similar command from the command prompt / terminal of your
+  local computer targeted at http://localhost:8080
+3. Run `vagrant share` and then target an endpoint such as
+  http://caring-orangutan-0713.vagrantshare.com/gitlab
+  You can learn more about Vagrant Share [here][vs].
+4. Run [ngrok][ngrok] on your local computer by executing `./ngrok http 8080`
+  and then targeting an endpoint such as http://2bf16064.ngrok.io/gitlab
+  (adapt the URL based on ngrok's output)
+
+
+[debian:jessie]: https://hub.docker.com/_/debian/
+[dockerimage]: https://hub.docker.com/r/genebean/tree-planter/
+[dockerimagelayers]: https://img.shields.io/imagelayers/layers/genebean/tree-planter/latest.svg
+[dockerimagesize-img]: https://img.shields.io/imagelayers/image-size/genebean/tree-planter/latest.svg
+[garethr/docker]: https://forge.puppet.com/garethr/docker
+[gemnasium-img]: https://img.shields.io/gemnasium/genebean/tree-planter.svg
+[gemnasium]: https://gemnasium.com/github.com/genebean/tree-planter
+[gosu]: https://github.com/tianon/gosu
+[hakiri]: https://hakiri.io/github/genebean/tree-planter/master
+[hakiri-img]: https://hakiri.io/github/genebean/tree-planter/master.svg
+[ngrok]: https://ngrok.com
 [passenger]: https://www.phusionpassenger.com
-[thin]: https://rubygems.org/gems/thin
+[puppet]: https://puppet.com
+[ruby:2.4-slim]: https://hub.docker.com/_/ruby/
+[sinatra]: http://www.sinatrarb.com
+[travis-ci]: https://travis-ci.org/genebean/tree-planter
+[travis-img-master]: https://img.shields.io/travis/genebean/tree-planter/master.svg
+[vs]: https://www.vagrantup.com/docs/share/http.html
