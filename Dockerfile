@@ -1,5 +1,10 @@
 FROM ruby:2.4-slim
+
+LABEL maintainer "gene@technicalissues.us"
+LABEL version="2.0.0"
+
 ENV GOSU_VERSION 1.10
+
 RUN apt-get update -qq \
   && apt-get install -y --no-install-recommends gcc git make openssh-client ruby-dev wget \
   && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
@@ -19,7 +24,9 @@ ENV APP_ROOT /var/www/tree-planter
 RUN mkdir -p $APP_ROOT
 WORKDIR $APP_ROOT
 ADD Gemfile* $APP_ROOT/
+
 RUN bundle install --jobs=3 --without development
+
 ADD . $APP_ROOT
 COPY config-example.json $APP_ROOT/config.json
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
