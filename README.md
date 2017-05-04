@@ -1,9 +1,7 @@
 [![Build Status][travis-img-master]][travis-ci]
+[![][microbadger-img]][microbadger]
 [![Gemnasium][gemnasium-img]][gemnasium]
 [![security][hakiri-img]][hakiri]
-[![ImageLayers Size][dockerimagesize-img]][dockerimage]
-[![ImageLayers Layers][dockerimagelayers]][dockerimage]
-
 
 # tree-planter
 
@@ -311,14 +309,14 @@ four ways:
 
 [debian:jessie]: https://hub.docker.com/_/debian/
 [dockerimage]: https://hub.docker.com/r/genebean/tree-planter/
-[dockerimagelayers]: https://img.shields.io/imagelayers/layers/genebean/tree-planter/latest.svg
-[dockerimagesize-img]: https://img.shields.io/imagelayers/image-size/genebean/tree-planter/latest.svg
 [garethr/docker]: https://forge.puppet.com/garethr/docker
 [gemnasium-img]: https://img.shields.io/gemnasium/genebean/tree-planter.svg
 [gemnasium]: https://gemnasium.com/github.com/genebean/tree-planter
 [gosu]: https://github.com/tianon/gosu
 [hakiri]: https://hakiri.io/github/genebean/tree-planter/master
 [hakiri-img]: https://hakiri.io/github/genebean/tree-planter/master.svg
+[microbadger]:https://microbadger.com/images/genebean/tree-planter
+[microbadger-img]:https://images.microbadger.com/badges/image/genebean/tree-planter.svg
 [ngrok]: https://ngrok.com
 [passenger]: https://www.phusionpassenger.com
 [puppet]: https://puppet.com
