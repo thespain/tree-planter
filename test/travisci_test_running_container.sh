@@ -12,7 +12,7 @@ else
 fi
 
 pre_branch='{"ref":"refs/heads/'
-post_branch='", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}'
+post_branch='", "repository":{"name":"tree-planter", "url":'\"https://github.com/${TRAVIS_REPO_SLUG}.git\"' }}'
 payload="${pre_branch}master${post_branch}"
 echo 'Posting this payload:'
 echo ${payload}|jq -C .
@@ -39,6 +39,34 @@ else
   exit 1
 fi
 
+echo "Testing pulling into alternate path"
+post_branch_with_path='", "repository":{"name":"tree-planter", "url":'\"https://github.com/${TRAVIS_REPO_SLUG}.git\"'}, "repo_path":"custom_path"}'
+payload_with_path="${pre_branch}master${post_branch_with_path}"
+echo 'Posting this payload:'
+echo ${payload_with_path}|jq -C .
+echo
+
+curl -s -H "Content-Type: application/json" -X POST -d "${payload_with_path}" http://127.0.0.1:80/gitlab
+
+custom_path_check=`ls -d ${TRAVIS_BUILD_DIR}/trees/custom_path/ |wc -l`
+
+if [ $custom_path_check -eq 1 ]; then
+  echo 'Successfully pulled master to alternate path'
+
+  echo
+  echo "Testing that pulled files are owned by me (${USER})"
+  ls -ld ${TRAVIS_BUILD_DIR}/trees/
+  ls -ld ${TRAVIS_BUILD_DIR}/trees/custom_path/
+
+  if [ "`stat -c '%U' ${TRAVIS_BUILD_DIR}/trees`" != "`stat -c '%U' ${TRAVIS_BUILD_DIR}/trees/custom_path/`" ]; then
+    echo 'Ownership is not the same on ./trees and ./trees/custom_path'
+    exit 1
+  fi
+else
+  echo 'Failed to pull master to alternate path'
+  exit 1
+fi
+
 if [ "${TRAVIS_BRANCH}" != "master" ] && [ "${TRAVIS_BRANCH}" != "develop" ]; then
   payload="${pre_branch}${TRAVIS_BRANCH}${post_branch}"
   echo 'Posting this payload:'
@@ -56,4 +84,3 @@ if [ "${TRAVIS_BRANCH}" != "master" ] && [ "${TRAVIS_BRANCH}" != "develop" ]; th
     exit 1
   fi
 fi
-

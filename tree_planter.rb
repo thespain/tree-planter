@@ -30,7 +30,11 @@ class TreePlanter < Sinatra::Base
       tree_name   = payload['tree_name']
       branch_name = ''
       repo_url    = payload['repo_url']
-      repo_path   = tree_name
+      if payload.has_key?('repo_path')
+        repo_path = payload['repo_path']
+      else
+        repo_path = tree_name
+      end
 
       logger.info("endpoint  = #{endpoint}")
       logger.info("tree name = #{tree_name}")
@@ -41,7 +45,11 @@ class TreePlanter < Sinatra::Base
       tree_name    = (payload['repository']['url'].split('/')[-1]).split('.')[0]
       branch_name  = (payload['ref'].split('/')).drop(2).join('___')
       repo_url     = payload['repository']['url']
-      repo_path    = tree_name
+      if payload.has_key?('repo_path')
+        repo_path  = payload['repo_path']
+      else
+        repo_path  = tree_name
+      end
 
       logger.info("endpoint     = #{endpoint}")
       logger.info("tree name    = #{tree_name}")
@@ -67,7 +75,11 @@ class TreePlanter < Sinatra::Base
       tree_name    = (payload['repository']['url'].split('/')[-1]).split('.')[0]
       branch_name  = (payload['ref'].split('/')).drop(2).join('/')
       repo_name    = payload['repository']['name']
-      repo_path    = "#{tree_name}___#{(payload['ref'].split('/')).drop(2).join('___')}"
+      if payload.has_key?('repo_path')
+        repo_path  = payload['repo_path']
+      else
+        repo_path  = "#{tree_name}___#{(payload['ref'].split('/')).drop(2).join('___')}"
+      end
       repo_url     = payload['repository']['url']
       checkout_sha = payload['checkout_sha']
       after        = payload['after']
