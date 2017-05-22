@@ -1,7 +1,7 @@
 ENV['RACK_ENV'] = 'test'
 
 require 'minitest/autorun'
-require "minitest/reporters"
+require 'minitest/reporters'
 require 'rack/test'
 require_relative '../tree_planter'
 
@@ -23,7 +23,7 @@ class TreePlanterTest < MiniTest::Test
   def test_post_deploy
     payload = '{"ref":"refs/heads/master", "checkout_sha":"some_commit_sha", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}'
     header 'Content-Type', 'application/json'
-    post '/deploy', payload, "CONTENT_TYPE" => "application/json"
+    post '/deploy', payload, 'CONTENT_TYPE' => 'application/json'
     assert last_response.ok?
     assert last_response.body.include?('repo_path: tree-planter')
   end
@@ -31,17 +31,25 @@ class TreePlanterTest < MiniTest::Test
   def test_post_gitlab_master
     payload = '{"ref":"refs/heads/master", "checkout_sha":"some_commit_sha", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}'
     header 'Content-Type', 'application/json'
-    post '/gitlab', payload, "CONTENT_TYPE" => "application/json"
+    post '/gitlab', payload, 'CONTENT_TYPE' => 'application/json'
     assert last_response.ok?
     assert last_response.body.include?('repo_path: tree-planter___master')
+  end
+
+  def test_post_gitlab_custom_path
+    payload = '{"ref":"refs/heads/master", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }, "repo_path":"custom_path"}'
+    header 'Content-Type', 'application/json'
+    post '/gitlab', payload, 'CONTENT_TYPE' => 'application/json'
+    assert last_response.ok?
+    assert last_response.body.include?('repo_path: custom_path')
   end
 
   def test_post_gitlab_delete
     payload = '{"ref":"refs/heads/master", "checkout_sha":"0000000000000000000000000000000000000000", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}'
     header 'Content-Type', 'application/json'
-    post '/gitlab', payload, "CONTENT_TYPE" => "application/json"
-    assert last_response.body.include?("base exists: true")
-    assert last_response.body.include?("repo exists: ")
+    post '/gitlab', payload, 'CONTENT_TYPE' => 'application/json'
+    assert last_response.body.include?('base exists: true')
+    assert last_response.body.include?('repo exists: ')
   end
 
   def test_post_hook_test
@@ -51,4 +59,3 @@ class TreePlanterTest < MiniTest::Test
     assert last_response.ok?
   end
 end
-
