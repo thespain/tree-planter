@@ -237,6 +237,7 @@ byproduct of how Sinatra / Rack do their logging.
 http://localhost:4567/deploy
 tree: tree-planter
 repo_url: https://github.com/genebean/tree-planter.git
+repo_path: tree-planter
 base: /opt/trees
 Running git clone https://github.com/genebean/tree-planter.git tree-planter
 Cloning into 'tree-planter'...
@@ -247,6 +248,7 @@ Cloning into 'tree-planter'...
 http://localhost:4567/deploy
 tree: tree-planter
 repo_url: https://github.com/genebean/tree-planter.git
+repo_path: tree-planter
 base: /opt/trees
 Running git pull
 Already up-to-date.
@@ -270,6 +272,26 @@ http://localhost/gitlab
 curl -H "Content-Type: application/json" -X POST -d \
 '{"ref":"refs/heads/feature/parsable_names", "checkout_sha":"858f1411ecd9d0b7c8f049a98412d1b3dcb68eae", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
 http://localhost/gitlab
+```
+
+
+### Clone a branch into an alternate destination path:
+
+```bash
+# Pull the default branch into a directory named "custom_path"
+# Note the presence of "repo_path" in this one
+curl -H "Content-Type: application/json" -X POST -d \
+'{ "tree_name": "tree-planter", "repo_url": "https://github.com/genebean/tree-planter.git", "repo_path": "custom_path" }' \
+http://localhost:4567/deploy
+endpoint:  deploy
+tree:      tree-planter
+branch:
+repo_url:  https://github.com/genebean/tree-planter.git
+repo_path: custom_path
+base:      /opt/trees
+
+Running git clone https://github.com/genebean/tree-planter.git custom_path
+Cloning into 'custom_path'...
 ```
 
 
