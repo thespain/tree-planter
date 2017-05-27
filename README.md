@@ -235,10 +235,13 @@ byproduct of how Sinatra / Rack do their logging.
 [vagrant@localhost opt]$ curl -H "Content-Type: application/json" -X POST -d \
 '{ "tree_name": "tree-planter", "repo_url": "https://github.com/genebean/tree-planter.git" }' \
 http://localhost:4567/deploy
-tree: tree-planter
-repo_url: https://github.com/genebean/tree-planter.git
+endpoint:  deploy
+tree:      tree-planter
+branch:
+repo_url:  https://github.com/genebean/tree-planter.git
 repo_path: tree-planter
-base: /opt/trees
+base:      /opt/trees
+
 Running git clone https://github.com/genebean/tree-planter.git tree-planter
 Cloning into 'tree-planter'...
 
@@ -246,10 +249,13 @@ Cloning into 'tree-planter'...
 [vagrant@localhost ~]$ curl -H "Content-Type: application/json" -X POST -d \
 '{ "tree_name": "tree-planter", "repo_url": "https://github.com/genebean/tree-planter.git" }' \
 http://localhost:4567/deploy
-tree: tree-planter
-repo_url: https://github.com/genebean/tree-planter.git
+endpoint:  deploy
+tree:      tree-planter
+branch:
+repo_url:  https://github.com/genebean/tree-planter.git
 repo_path: tree-planter
-base: /opt/trees
+base:      /opt/trees
+
 Running git pull
 Already up-to-date.
 ```
