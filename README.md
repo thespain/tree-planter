@@ -1,3 +1,4 @@
+[![GitHub tag][gh-tag-img]]()
 [![Build Status][travis-img-master]][travis-ci]
 [![][microbadger-img]][microbadger]
 [![Gemnasium][gemnasium-img]][gemnasium]
@@ -340,6 +341,7 @@ four ways:
 [garethr/docker]: https://forge.puppet.com/garethr/docker
 [gemnasium-img]: https://img.shields.io/gemnasium/genebean/tree-planter.svg
 [gemnasium]: https://gemnasium.com/github.com/genebean/tree-planter
+[gh-tag-img]: https://img.shields.io/github/tag/genebean/tree-planter.svg
 [gosu]: https://github.com/tianon/gosu
 [hakiri]: https://hakiri.io/github/genebean/tree-planter/master
 [hakiri-img]: https://hakiri.io/github/genebean/tree-planter/master.svg
