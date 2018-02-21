@@ -35,10 +35,7 @@ file { '/var/log/tree-planter':
 }
 
 class { '::docker':
-  use_upstream_package_source => false,
-  log_driver                  => 'journald',
-  package_name                => 'docker',
-  service_overrides_template  => false,
+  log_driver => 'journald',
 }
 
 ::docker::image { 'genebean/tree-planter':
