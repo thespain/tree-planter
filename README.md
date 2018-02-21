@@ -209,16 +209,16 @@ class { '::docker':
 
 ## End Points
 
-tree-planter has the following endpoints:  
+tree-planter has the following endpoints:
 * `/` - when the base URL is opened in a browser it show you a list of the
-  endpoints.  
+  endpoints.
 * `/deploy` - Deploys the default branch of a repository. It accepts a POST in
   the format of a GitLab webhook or in the custom format shown in the examples
-  below.  
+  below.
 * `/gitlab` - Deploys the branch of a repo referenced in the payload of a
   webhook POST from GitLab. Each branch is placed into a folder using the naming
   convention `repository_branch` such as `tree-planter_master`. All /'s are
-  replaced with underscores.  
+  replaced with underscores.
 * `/hook-test` - Used for testing and debugging. It displays diagnostic info
   about the payload that was POST'ed.
 
@@ -317,6 +317,11 @@ curl -H "Content-Type: application/json" -X POST -d \
 http://localhost/gitlab
 ```
 
+## Updating Gemfile.lock
+
+`update-gemfile-dot-lock.sh` will update `Gemfile.lock` using the Docker image
+defined in `Dockerfile`. It is designed to be run inside a vagrant environment
+and is run as part of `vagrant up`.
 
 ## Development & Testing
 
