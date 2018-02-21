@@ -1,0 +1,4 @@
+docker run -it --rm --name lilruby -v /vagrant:/vagrant \
+  $(grep FROM /vagrant/Dockerfile |cut -d ' ' -f2) \
+  /bin/bash -c "apt-get update && $(grep 'apt-get install' /vagrant/Dockerfile |sed -e 's/.*\(apt-get.*\)/\1/' |rev |cut -d ' ' -f2- |rev) && cd /vagrant && bundle install --jobs=3 --without development"
+

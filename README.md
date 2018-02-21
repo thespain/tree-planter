@@ -317,6 +317,10 @@ curl -H "Content-Type: application/json" -X POST -d \
 http://localhost/gitlab
 ```
 
+## Updating Gemfile.lock
+
+`update-gemfile-dot-lock.sh` will update `Gemfile.lock` using the Docker image
+defined in `Dockerfile`. It is designed to be run inside a vagrant environment.
 
 ## Development & Testing
 
