@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 pre_branch='{"ref":"refs/heads/'
 post_branch='", "repository":{"name":"tree-planter", "url":'\"https://github.com/${TRAVIS_REPO_SLUG}.git\"' }'

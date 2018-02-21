@@ -13,8 +13,8 @@ branches can also be deleted via a the GitLab webhook.
 Technology-wise, tree-planter is a Ruby application built on [Sinatra][sinatra].
 The application is served up by the [Passenger][passenger]
 gem. All this has been neatly wrapped up in a Docker container that's based on
-the official [ruby:2.4-slim][ruby:2.4-slim] one which, in turn, is based on
-the official [debian:jessie][debian:jessie] one. A utility called [gosu][gosu]
+the official [ruby:2.5-slim-stretch][ruby] one which, in turn, is based on
+the official [debian:stretch][debian] one. A utility called [gosu][gosu]
 is used for the entry point so that the application can run with a specified
 UID.
 
@@ -30,8 +30,8 @@ UID when we start up our container and that is who tree-planter will run as.
 ## Running the container
 
 All the example code below assumes you are using [Puppet][puppet] and the
-[garethr/docker][garethr/docker] module to manage your servers. If that is not
-the case you will still need to account for creating an application user and
+[puppetlabs/docker][puppetlabs/docker] module to manage your servers. If that is
+not the case you will still need to account for creating an application user and
 creating init scripts or systemd unit files for starting and stopping the
 container. There are also a couple of directories that need to be created and
 have their ownership set to that of the application user. Now, on with getting
@@ -96,14 +96,11 @@ file { '/var/log/tree-planter':
 
 Now that our user and directories are in place lets get the container going.
 Details of what the code below does can be found at on the Puppet Forge page
-for [garethr/docker][garethr/docker].
+for [puppetlabs/docker][puppetlabs/docker].
 
 ```puppet
 class { '::docker':
-  use_upstream_package_source => false,
-  log_driver                  => 'journald',
-  package_name                => 'docker',
-  service_overrides_template  => false,
+  log_driver => 'journald',
 }
 
 ::docker::image { 'genebean/tree-planter':
@@ -177,10 +174,7 @@ file { '/var/log/tree-planter':
 }
 
 class { '::docker':
-  use_upstream_package_source => false,
-  log_driver                  => 'journald',
-  package_name                => 'docker',
-  service_overrides_template  => false,
+  log_driver => 'journald',
 }
 
 ::docker::image { 'genebean/tree-planter':
@@ -209,16 +203,16 @@ class { '::docker':
 
 ## End Points
 
-tree-planter has the following endpoints:  
+tree-planter has the following endpoints:
 * `/` - when the base URL is opened in a browser it show you a list of the
-  endpoints.  
+  endpoints.
 * `/deploy` - Deploys the default branch of a repository. It accepts a POST in
   the format of a GitLab webhook or in the custom format shown in the examples
-  below.  
+  below.
 * `/gitlab` - Deploys the branch of a repo referenced in the payload of a
   webhook POST from GitLab. Each branch is placed into a folder using the naming
   convention `repository_branch` such as `tree-planter_master`. All /'s are
-  replaced with underscores.  
+  replaced with underscores.
 * `/hook-test` - Used for testing and debugging. It displays diagnostic info
   about the payload that was POST'ed.
 
@@ -317,6 +311,11 @@ curl -H "Content-Type: application/json" -X POST -d \
 http://localhost/gitlab
 ```
 
+## Updating Gemfile.lock
+
+`update-gemfile-dot-lock.sh` will update `Gemfile.lock` using the Docker image
+defined in `Dockerfile`. It is designed to be run inside a vagrant environment
+and is run as part of `vagrant up`.
 
 ## Development & Testing
 
@@ -336,9 +335,8 @@ four ways:
   (adapt the URL based on ngrok's output)
 
 
-[debian:jessie]: https://hub.docker.com/_/debian/
+[debian]: https://hub.docker.com/_/debian/
 [dockerimage]: https://hub.docker.com/r/genebean/tree-planter/
-[garethr/docker]: https://forge.puppet.com/garethr/docker
 [gemnasium-img]: https://img.shields.io/gemnasium/genebean/tree-planter.svg
 [gemnasium]: https://gemnasium.com/github.com/genebean/tree-planter
 [gh-tag-img]: https://img.shields.io/github/tag/genebean/tree-planter.svg
@@ -350,7 +348,8 @@ four ways:
 [ngrok]: https://ngrok.com
 [passenger]: https://www.phusionpassenger.com
 [puppet]: https://puppet.com
-[ruby:2.4-slim]: https://hub.docker.com/_/ruby/
+[puppetlabs/docker]: https://forge.puppet.com/puppetlabs/docker
+[ruby]: https://hub.docker.com/_/ruby/
 [sinatra]: http://www.sinatrarb.com
 [travis-ci]: https://travis-ci.org/genebean/tree-planter
 [travis-img-master]: https://img.shields.io/travis/genebean/tree-planter/master.svg

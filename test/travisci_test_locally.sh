@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 echo 'Creating config.json for testing'
 printf "{ \"base_dir\": \"${TRAVIS_BUILD_DIR}/trees\" }" > ${TRAVIS_BUILD_DIR}/config.json
