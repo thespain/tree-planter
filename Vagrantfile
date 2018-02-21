@@ -8,36 +8,34 @@ Vagrant.configure(2) do |config|
   config.vm.network 'forwarded_port', guest: 80, host: 8080
 
   config.vm.provision 'shell',
-    name: 'Pull insecure vagrant_priv_key',
-    inline: <<-EOF
+                      name: 'Pull insecure vagrant_priv_key',
+                      inline: <<-EOF
     set -e
     curl -o /home/vagrant/.ssh/vagrant_priv_key https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant
     chown vagrant.vagrant /home/vagrant/.ssh/vagrant_priv_key
     chmod 600 /home/vagrant/.ssh/vagrant_priv_key
   EOF
-
   config.vm.provision 'shell',
-    name: 'Install Puppet Modules',
-    inline: 'puppet module install puppetlabs-docker --version 1.0.5'
+                      name: 'Install Puppet Modules',
+                      inline: 'puppet module install puppetlabs-docker --version 1.0.5'
   config.vm.provision 'shell',
-    name: 'Install Docker',
-    inline: "puppet apply -e \"class { '::docker': log_driver => 'journald' }\""
+                      name: 'Install Docker',
+                      inline: "puppet apply -e \"class { '::docker': log_driver => 'journald' }\""
   config.vm.provision 'shell',
-    name: 'Update Gemfile.lock',
-    inline: '/vagrant/update-gemfile-dot-lock.sh'
+                      name: 'Update Gemfile.lock',
+                      inline: '/vagrant/update-gemfile-dot-lock.sh'
   config.vm.provision 'shell',
-    name: 'System setup',
-    inline: 'puppet apply /vagrant/docker.pp'
+                      name: 'System setup',
+                      inline: 'puppet apply /vagrant/docker.pp'
   config.vm.provision 'shell',
-    name: 'List running containers',
-    inline: 'docker ps'
+                      name: 'List running containers',
+                      inline: 'docker ps'
   config.vm.provision 'shell',
-    name: 'Test container',
-    inline: "docker exec johnny_appleseed /bin/sh -c 'bundle exec rake test'"
-
+                      name: 'Test container',
+                      inline: "docker exec johnny_appleseed /bin/sh -c 'bundle exec rake test'"
   config.vm.provision 'shell',
-    name: 'API test',
-    inline: <<-EOF
+                      name: 'API test',
+                      inline: <<-EOF
     set -e
     rm -rf /home/vagrant/trees/tree-planter*
     curl -H "Content-Type: application/json" -X POST -d \
