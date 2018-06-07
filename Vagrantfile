@@ -20,7 +20,7 @@ Vagrant.configure(2) do |config|
                       inline: 'puppet module install puppetlabs-docker --version 1.1.0'
   config.vm.provision 'shell',
                       name: 'Install Docker',
-                      inline: "puppet apply -e \"class { '::docker': log_driver => 'journald' }\""
+                      inline: "puppet apply -e \"class { 'docker': log_driver => 'journald' }\""
   config.vm.provision 'shell',
                       name: 'Update Gemfile.lock',
                       inline: '/vagrant/update-gemfile-dot-lock.sh'
