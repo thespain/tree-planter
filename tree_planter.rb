@@ -255,5 +255,5 @@ class TreePlanter < Sinatra::Base
     end
   end
   # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity
-  # rubocop:enable Metrics/ParameterLists, Metrics/PerceivedComplexity
+  # rubocop:enable Metrics/PerceivedComplexity
 end
