@@ -17,7 +17,7 @@ Vagrant.configure(2) do |config|
   EOF
   config.vm.provision 'shell',
                       name: 'Install Puppet Modules',
-                      inline: 'puppet module install puppetlabs-docker --version 1.0.5'
+                      inline: 'puppet module install puppetlabs-docker --version 1.1.0'
   config.vm.provision 'shell',
                       name: 'Install Docker',
                       inline: "puppet apply -e \"class { '::docker': log_driver => 'journald' }\""
