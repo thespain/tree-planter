@@ -4,6 +4,13 @@ AllCops:
     - 'trees/**/*'
     - 'vendor/**/*'
 
+Layout/ClosingHeredocIndentation:
+  Exclude:
+    - 'Vagrantfile'
+
+Layout/ExtraSpacing:
+  Enabled: false
+
 Metrics/BlockLength:
   Enabled: false
 
@@ -21,9 +28,16 @@ Metrics/MethodLength:
 Metrics/ModuleLength:
   Enabled: false
 
+Naming/HeredocDelimiterNaming:
+  Exclude:
+    - 'Vagrantfile'
+
+Style/CommentedKeyword:
+  Enabled: false
+
 Style/ConditionalAssignment:
   Enabled: false
 
-Style/ExtraSpacing:
+Style/RescueStandardError:
   Enabled: false
 
