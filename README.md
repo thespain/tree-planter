@@ -1,7 +1,6 @@
 [![GitHub tag][gh-tag-img]]()
 [![Build Status][travis-img-master]][travis-ci]
 [![][microbadger-img]][microbadger]
-[![Gemnasium][gemnasium-img]][gemnasium]
 [![security][hakiri-img]][hakiri]
 
 # tree-planter
@@ -65,7 +64,7 @@ user { $appuser:
   password         => '$6$eVECWbuT$6PZ6cqTwG11jrwpgB0g1Q5GyV3Y.UvEiXfT/KR3XP8RfHhHvJsp1.zU1H0ljuhFnw39r.HoSQiXm/RxcqCBQ7/',
   password_max_age => '99999',
   password_min_age => '0',
-  shell            => '/bin/bash',
+  shell            => '/bin/zsh',
   uid              => $appuseruid,
   require          => Group['docker'],
 }
@@ -99,15 +98,15 @@ Details of what the code below does can be found at on the Puppet Forge page
 for [puppetlabs/docker][puppetlabs/docker].
 
 ```puppet
-class { '::docker':
+class { 'docker':
   log_driver => 'journald',
 }
 
-::docker::image { 'genebean/tree-planter':
+docker::image { 'genebean/tree-planter':
   image_tag => 'latest',
 }
 
-::docker::run { 'johnny_appleseed':
+docker::run { 'johnny_appleseed':
   image           => 'genebean/tree-planter',
   ports           => '80:8080',
   volumes         => [
@@ -173,15 +172,15 @@ file { '/var/log/tree-planter':
   owner    => $appuser,
 }
 
-class { '::docker':
+class { 'docker':
   log_driver => 'journald',
 }
 
-::docker::image { 'genebean/tree-planter':
+docker::image { 'genebean/tree-planter':
   image_tag => 'latest',
 }
 
-::docker::run { 'johnny_appleseed':
+docker::run { 'johnny_appleseed':
   image           => 'genebean/tree-planter',
   ports           => '80:8080',
   volumes         => [
@@ -239,7 +238,9 @@ base:      /opt/trees
 
 Running git clone https://github.com/genebean/tree-planter.git tree-planter
 Cloning into 'tree-planter'...
+```
 
+```bash
 # second run using the /deploy endpoint
 [vagrant@localhost ~]$ curl -H "Content-Type: application/json" -X POST -d \
 '{ "tree_name": "tree-planter", "repo_url": "https://github.com/genebean/tree-planter.git" }' \
@@ -337,8 +338,6 @@ four ways:
 
 [debian]: https://hub.docker.com/_/debian/
 [dockerimage]: https://hub.docker.com/r/genebean/tree-planter/
-[gemnasium-img]: https://img.shields.io/gemnasium/genebean/tree-planter.svg
-[gemnasium]: https://gemnasium.com/github.com/genebean/tree-planter
 [gh-tag-img]: https://img.shields.io/github/tag/genebean/tree-planter.svg
 [gosu]: https://github.com/tianon/gosu
 [hakiri]: https://hakiri.io/github/genebean/tree-planter/master

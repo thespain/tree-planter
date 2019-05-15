@@ -13,7 +13,7 @@ user { $appuser:
   password         => '$6$eVECWbuT$6PZ6cqTwG11jrwpgB0g1Q5GyV3Y.UvEiXfT/KR3XP8RfHhHvJsp1.zU1H0ljuhFnw39r.HoSQiXm/RxcqCBQ7/',
   password_max_age => '99999',
   password_min_age => '0',
-  shell            => '/bin/bash',
+  shell            => '/bin/zsh',
   uid              => $appuseruid,
   require          => Group['docker'],
 }
@@ -34,15 +34,15 @@ file { '/var/log/tree-planter':
   owner  => $appuser,
 }
 
-class { '::docker':
+class { 'docker':
   log_driver => 'journald',
 }
 
-::docker::image { 'genebean/tree-planter':
+docker::image { 'genebean/tree-planter':
   docker_dir => '/vagrant',
 }
 
-::docker::run { 'johnny_appleseed':
+docker::run { 'johnny_appleseed':
   image           => 'genebean/tree-planter',
   ports           => '80:8080',
   volumes         => [
