@@ -2,7 +2,7 @@ FROM ruby:2.5-slim-stretch
 
 LABEL maintainer "gene@technicalissues.us"
 
-ENV GOSU_VERSION 1.10
+ENV GOSU_VERSION 1.11
 ENV APP_ROOT /var/www/tree-planter
 RUN mkdir -p $APP_ROOT
 WORKDIR $APP_ROOT

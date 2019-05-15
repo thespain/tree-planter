@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-  config.vm.box = 'genebean/centos-7-puppet5'
+  config.vm.box = 'genebean/centos-7-puppet-latest'
 
   config.vm.hostname = 'dockerhost.localdomain'
   config.vm.network 'forwarded_port', guest: 80, host: 8080
@@ -17,7 +19,7 @@ Vagrant.configure(2) do |config|
   EOF
   config.vm.provision 'shell',
                       name: 'Install Puppet Modules',
-                      inline: 'puppet module install puppetlabs-docker --version 1.1.0'
+                      inline: 'puppet module install puppetlabs-docker --version 3.5.0'
   config.vm.provision 'shell',
                       name: 'Install Docker',
                       inline: "puppet apply -e \"class { 'docker': log_driver => 'journald' }\""
