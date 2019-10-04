@@ -2,6 +2,7 @@
 [![Build Status][travis-img-master]][travis-ci]
 [![][microbadger-img]][microbadger]
 [![security][hakiri-img]][hakiri]
+[![Dependabot Status][dependabot-img]][dependabot-url]
 
 # tree-planter
 
@@ -337,6 +338,8 @@ four ways:
 
 
 [debian]: https://hub.docker.com/_/debian/
+[dependabot-img]: https://api.dependabot.com/badges/status?host=github&repo=genebean/tree-planter
+[dependabot-url]: https://dependabot.com
 [dockerimage]: https://hub.docker.com/r/genebean/tree-planter/
 [gh-tag-img]: https://img.shields.io/github/tag/genebean/tree-planter.svg
 [gosu]: https://github.com/tianon/gosu
