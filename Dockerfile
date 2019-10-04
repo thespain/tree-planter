@@ -1,4 +1,4 @@
-FROM ruby:2.5-slim-stretch
+FROM ruby:2.6.5-slim-stretch
 
 LABEL maintainer "gene@technicalissues.us"
 
