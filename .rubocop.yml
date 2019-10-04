@@ -11,6 +11,9 @@ Layout/ClosingHeredocIndentation:
 Layout/ExtraSpacing:
   Enabled: false
 
+Layout/SpaceAroundOperators:
+  Enabled: false
+
 Metrics/BlockLength:
   Enabled: false
 
