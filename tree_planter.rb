@@ -18,7 +18,11 @@ class TreePlanter < Sinatra::Base
        <li>#{request.url}deploy</li>
        <li>#{request.url}gitlab</li>
        <li>#{request.url}hook-test</li>
-     </ul>"
+     </ul>
+     <h2>Metrics</h2>
+     <p>Prometheus metrics are available via
+       <a href='#{request.url}metrics'>#{request.url}metrics</a>
+     <p>"
   end
 
   # Deploys a repository using the default branch
@@ -43,6 +47,7 @@ class TreePlanter < Sinatra::Base
       logger.info("repo url  = #{repo_url}")
       logger.info("repo path = #{repo_path}")
     else
+      # rubocop:disable Layout/SpaceAroundOperators
       tree_name    = (payload['repository']['url'].split('/')[-1]).split('.')[0]
       branch_name  = payload['ref'].split('/').drop(2).join('___')
       repo_url     = payload['repository']['url']
@@ -51,6 +56,7 @@ class TreePlanter < Sinatra::Base
       else
         repo_path  = tree_name
       end
+      # rubocop:enable Layout/SpaceAroundOperators
 
       logger.info("endpoint     = #{endpoint}")
       logger.info("tree name    = #{tree_name}")
@@ -61,9 +67,9 @@ class TreePlanter < Sinatra::Base
 
     logger.info('')
 
-    # rubocop:disable Metrics/LineLength
+    # rubocop:disable Layout/LineLength
     deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
-    # rubocop:enable Metrics/LineLength
+    # rubocop:enable Layout/LineLength
   end
 
   # Parses the payload from GitLab and deploys a specific branch of a repository
@@ -73,6 +79,7 @@ class TreePlanter < Sinatra::Base
 
     # Determine event type
     if payload['ref'].split('/')[1].eql? 'heads'
+      # rubocop:disable Layout/SpaceAroundOperators
       endpoint     = 'gitlab'
       tree_name    = (payload['repository']['url'].split('/')[-1]).split('.')[0]
       branch_name  = payload['ref'].split('/').drop(2).join('/')
@@ -80,13 +87,14 @@ class TreePlanter < Sinatra::Base
       if payload.key?('repo_path')
         repo_path  = payload['repo_path']
       else
-        # rubocop:disable Metrics/LineLength
+        # rubocop:disable Layout/LineLength
         repo_path  = "#{tree_name}___#{payload['ref'].split('/').drop(2).join('___')}"
-        # rubocop:enable Metrics/LineLength
+        # rubocop:enable Layout/LineLength
       end
       repo_url     = payload['repository']['url']
       checkout_sha = payload['checkout_sha']
       after        = payload['after']
+      # rubocop:enable Layout/SpaceAroundOperators
 
       logger.info("repo name    = #{repo_name}")
       logger.info("repo url     = #{repo_url}")
@@ -96,7 +104,7 @@ class TreePlanter < Sinatra::Base
       logger.info("after sha    = #{after}")
       logger.info('')
 
-      # rubocop:disable Metrics/LineLength
+      # rubocop:disable Layout/LineLength
       if checkout_sha.eql?('0000000000000000000000000000000000000000') # old GitLab JSON Payload
         delete_branch(endpoint, repo_path, config_obj)
       elsif after.eql?('0000000000000000000000000000000000000000') && checkout_sha.nil? # newer GitLab JSON Payload
@@ -104,7 +112,7 @@ class TreePlanter < Sinatra::Base
       else
         deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
       end
-      # rubocop:enable Metrics/LineLength
+      # rubocop:enable Layout/LineLength
 
     elsif payload['ref'].split('/')[1].eql? 'tags'
       tag_name = payload['ref'].split('/')[2]
@@ -137,10 +145,10 @@ class TreePlanter < Sinatra::Base
     body_content << "\n"
 
     if Dir.exist?(base) && Dir.exist?("#{base}/#{repo_path}")
-      # rubocop:disable Metrics/LineLength
+      # rubocop:disable Layout/LineLength
       body_content << "Attempting to remove '#{repo_path}' from inside '#{base}'\n"
       logger.info("Attempting to remove '#{repo_path}' from inside '#{base}'")
-      # rubocop:enable Metrics/LineLength
+      # rubocop:enable Layout/LineLength
 
       begin
         Dir.chdir(base)
@@ -167,9 +175,9 @@ class TreePlanter < Sinatra::Base
         body_content << "#{msg}\n"
       end
     else
-      # rubocop:disable Metrics/LineLength
+      # rubocop:disable Layout/LineLength
       msg = 'Unable to delete branch. Either the delete failed or it does not exist locally. Additional info, if avilable, is below:'
-      # rubocop:enable Metrics/LineLength
+      # rubocop:enable Layout/LineLength
       logger.error(msg)
       body_content << msg
       body_content << "\n"
@@ -186,9 +194,9 @@ class TreePlanter < Sinatra::Base
   end
   # rubocop:enable Metrics/AbcSize
 
-  # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/LineLength, Metrics/ParameterLists, Metrics/PerceivedComplexity
+  # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Layout/LineLength, Metrics/ParameterLists, Metrics/PerceivedComplexity
   def deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
-    # rubocop:enable Metrics/LineLength, Metrics/ParameterLists
+    # rubocop:enable Layout/LineLength, Metrics/ParameterLists
     base = config_obj['base_dir']
 
     stream do |body_content|
@@ -223,9 +231,9 @@ class TreePlanter < Sinatra::Base
         elsif branch_name.eql? ''
           deploy_command = "git clone #{repo_url} #{repo_path}"
         else
-          # rubocop:disable Metrics/LineLength
+          # rubocop:disable Layout/LineLength
           deploy_command = "git clone -b #{branch_name} --single-branch #{repo_url} #{repo_path}"
-          # rubocop:enable Metrics/LineLength
+          # rubocop:enable Layout/LineLength
         end
 
         body_content << "Running #{deploy_command}\n"
