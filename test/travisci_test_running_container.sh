@@ -25,6 +25,20 @@ echo
 
 
 ################################################################################
+#   Testing /metrics
+################################################################################
+metrics_check=`curl -s 127.0.0.1:80/metrics | grep '^http_server_requests_total' -c`
+
+if [ $metrics_check -gt 0 ]; then
+  echo 'GET /metrics rendered correctly'
+else
+  echo 'GET /metrics did not render correctly'
+  exit 1
+fi
+echo
+
+
+################################################################################
 #   Testing /deploy
 ################################################################################
 deploy_payload='{ "tree_name": "tree-planter", "repo_url": '\"https://github.com/${TRAVIS_REPO_SLUG}.git\"' }'
