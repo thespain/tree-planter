@@ -18,7 +18,11 @@ class TreePlanter < Sinatra::Base
        <li>#{request.url}deploy</li>
        <li>#{request.url}gitlab</li>
        <li>#{request.url}hook-test</li>
-     </ul>"
+     </ul>
+     <h2>Metrics</h2>
+     <p>Prometheus metrics are available via
+       <a href='#{request.url}metrics'>#{request.url}metrics</a>
+     <p>"
   end
 
   # Deploys a repository using the default branch
