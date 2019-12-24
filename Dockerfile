@@ -1,4 +1,4 @@
-FROM ruby:2.5-slim-stretch
+FROM ruby:2.6.5-slim-buster
 
 LABEL maintainer "gene@technicalissues.us"
 
@@ -26,7 +26,7 @@ RUN dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
 
 ADD Gemfile* $APP_ROOT/
 
-RUN bundle install --jobs=3 --without development
+RUN gem install bundler && bundle install --jobs=3 --without development
 
 ADD . $APP_ROOT
 COPY config-example.json $APP_ROOT/config.json
