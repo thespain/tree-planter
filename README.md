@@ -6,42 +6,33 @@
 
 # tree-planter
 
-tree-planter is a webhook receiver that is designed to deploy code trees via
-either a simple JSON payload or the payload from a GitLab webhook. Cloned
-branches can also be deleted via a the GitLab webhook.
+tree-planter is a webhook receiver that is designed to deploy code trees via either a simple JSON payload or the payload from a GitLab webhook. Cloned branches can also be deleted via a the GitLab webhook.
 
-Technology-wise, tree-planter is a Ruby application built on [Sinatra][sinatra].
-The application is served up by the [Passenger][passenger]
-gem. All this has been neatly wrapped up in a Docker container that's based on
-the official [ruby:2.5-slim-stretch][ruby] one which, in turn, is based on
-the official [debian:stretch][debian] one. A utility called [gosu][gosu]
-is used for the entry point so that the application can run with a specified
-UID.
+Technology-wise, tree-planter is a Ruby application built on [Sinatra][sinatra]. The application is served up by the [Passenger][passenger] gem. All this has been neatly wrapped up in a Docker container that's based on the official [ruby:2.6-slim-buster][ruby] one which, in turn, is based on the official [debian:buster][debian] one. A utility called [gosu][gosu] is used for the entry point so that the application can run with a specified UID.
 
+- [File ownership / permissions](#file-ownership--permissions)
+- [Running the container](#running-the-container)
+  - [And here it is all together](#and-here-it-is-all-together)
+- [End Points](#end-points)
+- [Examples](#examples)
+  - [Triggering the /deploy endpoint via cURL](#triggering-the-deploy-endpoint-via-curl)
+  - [Triggering the /gitlab endpoint via cURL with a GitLab-like payload](#triggering-the-gitlab-endpoint-via-curl-with-a-gitlab-like-payload)
+  - [Clone a branch into an alternate destination path](#clone-a-branch-into-an-alternate-destination-path)
+  - [Delete cloned copy of feature/parsable_names branch with a GitLab-like payload](#delete-cloned-copy-of-featureparsablenames-branch-with-a-gitlab-like-payload)
+- [Updating Gemfile.lock](#updating-gemfilelock)
+- [Development &amp; Testing](#development-amp-testing)
 
 ## File ownership / permissions
 
-If you are deploying a git repository somewhere, and you must be if you are
-looking to use to use tree-planter, then permissions on the downloaded files
-are likely important. This is where [gosu][gosu] comes in. We wil pass in a
-UID when we start up our container and that is who tree-planter will run as.
-
+If you are deploying a git repository somewhere, and you must be if you are looking to use to use tree-planter, then permissions on the downloaded files are likely important. This is where [gosu][gosu] comes in. We will pass in a UID when we start up our container and that is who tree-planter will run as.
 
 ## Running the container
 
-All the example code below assumes you are using [Puppet][puppet] and the
-[puppetlabs/docker][puppetlabs/docker] module to manage your servers. If that is
-not the case you will still need to account for creating an application user and
-creating init scripts or systemd unit files for starting and stopping the
-container. There are also a couple of directories that need to be created and
-have their ownership set to that of the application user. Now, on with getting
-your instance of tree-planter up and running.
+All the example code below assumes you are using [Puppet][puppet] and the [puppetlabs/docker][puppetlabs/docker] module to manage your servers. If that is not the case you will still need to account for creating an application user and creating init scripts or systemd unit files for starting and stopping the container. There are also a couple of directories that need to be created and have their ownership set to that of the application user. Now, on with getting your instance of tree-planter up and running.
 
-Lets step through things and then put it all together in one copy/past friendly
-block farther down the page.
+Lets step through things and then put it all together in one copy/past friendly block farther down the page.
 
-First things first, let create the group that lets other users run Docker
-commands:
+First things first, let create the group that lets other users run Docker commands:
 
 ```puppet
 group { 'docker':
@@ -49,9 +40,7 @@ group { 'docker':
 }
 ```
 
-Now lets create an application user. Since development of this
-project is done inside a VM by way of Vagrant our example user is going to be
-named `vagrant`.
+Now lets create an application user. Since development of this project is done inside a VM by way of Vagrant our example user is going to be named `vagrant`.
 
 ```puppet
 $appuser    = 'vagrant'
@@ -71,8 +60,7 @@ user { $appuser:
 }
 ```
 
-A key thing to note in the code above is that the user is in the docker group.
-This lets them run Docker commands without sudo.
+A key thing to note in the code above is that the user is in the docker group. This lets them run Docker commands without sudo.
 
 Next, lets make the directories needed for this application.
 
@@ -94,9 +82,7 @@ file { '/var/log/tree-planter':
 }
 ```
 
-Now that our user and directories are in place lets get the container going.
-Details of what the code below does can be found at on the Puppet Forge page
-for [puppetlabs/docker][puppetlabs/docker].
+Now that our user and directories are in place lets get the container going. Details of what the code below does can be found at on the Puppet Forge page for [puppetlabs/docker][puppetlabs/docker].
 
 ```puppet
 class { 'docker':
@@ -127,14 +113,12 @@ docker::run { 'johnny_appleseed':
 ```
 
 There are a couple of things from above that I want to pull your attention to:
-* `log_driver => 'journald',` - Explicitly use journald. If you are not using
-  systemd then you will need to adjust this.
-* `ports => '80:8080',` - 80 is the port that will be used on your host.
-* `"/home/${appuser}/.ssh/id_rsa:/home/user/.ssh/id_rsa",` - this is the ssh
-  key that will be used for pulling repositories.
 
+- `log_driver => 'journald',` - Explicitly use journald. If you are not using systemd then you will need to adjust this.
+- `ports => '80:8080',` - 80 is the port that will be used on your host.
+- `"/home/${appuser}/.ssh/id_rsa:/home/user/.ssh/id_rsa",` - this is the ssh key that will be used for pulling repositories.
 
-### And here it is all together:
+### And here it is all together
 
 ```puppet
 $appuser    = 'vagrant'
@@ -200,30 +184,21 @@ docker::run { 'johnny_appleseed':
 }
 ```
 
-
 ## End Points
 
 tree-planter has the following endpoints:
-* `/` - when the base URL is opened in a browser it show you a list of the
-  endpoints.
-* `/deploy` - Deploys the default branch of a repository. It accepts a POST in
-  the format of a GitLab webhook or in the custom format shown in the examples
-  below.
-* `/gitlab` - Deploys the branch of a repo referenced in the payload of a
-  webhook POST from GitLab. Each branch is placed into a folder using the naming
-  convention `repository_branch` such as `tree-planter_master`. All /'s are
-  replaced with underscores.
-* `/hook-test` - Used for testing and debugging. It displays diagnostic info
-  about the payload that was POST'ed.
 
-If using the Vagrant box or running behind Apache on your server these will all
-send a fair amount of info to Apache's error log. The error log is used as a
-byproduct of how Sinatra / Rack do their logging.
+- `/` - when the base URL is opened in a browser it show you a list of the endpoints.
+- `/deploy` - Deploys the default branch of a repository. It accepts a POST in the format of a GitLab webhook or in the custom format shown in the examples below.
+- `/gitlab` - Deploys the branch of a repo referenced in the payload of a webhook POST from GitLab. Each branch is placed into a folder using the naming convention `repository_branch` such as `tree-planter_master`. All /'s are replaced with underscores.
+- `/hook-test` - Used for testing and debugging. It displays diagnostic info about the payload that was POST'ed.
+- `/metrics` - Displays Prometheus metrics
 
+If using the Vagrant box or running behind Apache on your server these will all send a fair amount of info to Apache's error log. The error log is used as a byproduct of how Sinatra / Rack do their logging.
 
 ## Examples
 
-### Triggering the `/deploy` endpoint via cURL:
+### Triggering the `/deploy` endpoint via cURL
 
 ```bash
 # first run using
@@ -257,8 +232,7 @@ Running git pull
 Already up-to-date.
 ```
 
-
-### Triggering the `/gitlab` endpoint via cURL with a GitLab-like payload:
+### Triggering the `/gitlab` endpoint via cURL with a GitLab-like payload
 
 ```bash
 # Pull master branch
@@ -277,8 +251,7 @@ curl -H "Content-Type: application/json" -X POST -d \
 http://localhost/gitlab
 ```
 
-
-### Clone a branch into an alternate destination path:
+### Clone a branch into an alternate destination path
 
 ```bash
 # Pull the default branch into a directory named "custom_path"
@@ -297,7 +270,6 @@ Running git clone https://github.com/genebean/tree-planter.git custom_path
 Cloning into 'custom_path'...
 ```
 
-
 ### Delete cloned copy of feature/parsable_names branch with a GitLab-like payload
 
 ```bash
@@ -315,27 +287,16 @@ http://localhost/gitlab
 
 ## Updating Gemfile.lock
 
-`update-gemfile-dot-lock.sh` will update `Gemfile.lock` using the Docker image
-defined in `Dockerfile`. It is designed to be run inside a vagrant environment
-and is run as part of `vagrant up`.
+`update-gemfile-dot-lock.sh` will update `Gemfile.lock` using the Docker image defined in `Dockerfile`. It is designed to be run inside a vagrant environment and is run as part of `vagrant up`.
 
 ## Development & Testing
 
-The repository contains a Vagrantfile that will allow you to fire up a CentOS 7
-box that contains the Puppet agent. It builds and deploys the Docker image using
-the tools documented above. After it is up you can talk to the container in
-four ways:
+The repository contains a Vagrantfile that will allow you to fire up a CentOS 7 box that contains the Puppet agent. It builds and deploys the Docker image using the tools documented above. After it is up you can talk to the container in four ways:
 
 1. Run `curl` commands from inside the Vagrant box targeted at http://localhost
-2. Run `curl` or a similar command from the command prompt / terminal of your
-  local computer targeted at http://localhost:8080
-3. Run `vagrant share` and then target an endpoint such as
-  http://caring-orangutan-0713.vagrantshare.com/gitlab
-  You can learn more about Vagrant Share [here][vs].
-4. Run [ngrok][ngrok] on your local computer by executing `./ngrok http 8080`
-  and then targeting an endpoint such as http://2bf16064.ngrok.io/gitlab
-  (adapt the URL based on ngrok's output)
-
+2. Run `curl` or a similar command from the command prompt / terminal of your local computer targeted at http://localhost:8080
+3. Run `vagrant share` and then target an endpoint such as http://caring-orangutan-0713.vagrantshare.com/gitlab You can learn more about Vagrant Share [here][vs].
+4. Run [ngrok][ngrok] on your local computer by executing `./ngrok http 8080` and then targeting an endpoint such as http://2bf16064.ngrok.io/gitlab (adapt the URL based on ngrok's output)
 
 [debian]: https://hub.docker.com/_/debian/
 [dependabot-img]: https://api.dependabot.com/badges/status?host=github&repo=genebean/tree-planter
