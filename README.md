@@ -15,12 +15,17 @@ Technology-wise, tree-planter is a Ruby application built on [Sinatra][sinatra].
   - [And here it is all together](#and-here-it-is-all-together)
 - [End Points](#end-points)
 - [Examples](#examples)
+  - [Metrics](#metrics)
   - [Triggering the /deploy endpoint via cURL](#triggering-the-deploy-endpoint-via-curl)
   - [Triggering the /gitlab endpoint via cURL with a GitLab-like payload](#triggering-the-gitlab-endpoint-via-curl-with-a-gitlab-like-payload)
   - [Clone a branch into an alternate destination path](#clone-a-branch-into-an-alternate-destination-path)
-  - [Delete cloned copy of feature/parsable_names branch with a GitLab-like payload](#delete-cloned-copy-of-featureparsablenames-branch-with-a-gitlab-like-payload)
+  - [Delete cloned copy of feature/parsable_names branch with a GitLab-like payload](#delete-cloned-copy-of-featureparsable_names-branch-with-a-gitlab-like-payload)
 - [Updating Gemfile.lock](#updating-gemfilelock)
 - [Development &amp; Testing](#development-amp-testing)
+  - [Vagrant](#vagrant)
+  - [Manual testing](#manual-testing)
+  - [Validation](#validation)
+  - [Don't forget](#dont-forget)
 
 ## File ownership / permissions
 
@@ -198,6 +203,23 @@ If using the Vagrant box or running behind Apache on your server these will all 
 
 ## Examples
 
+### Metrics
+
+Both stock metrics provided by integrating with Rack and custom metrics are available via the `/metrics` endpoint. Here is a sample of what you should see there:
+
+```plain
+# TYPE tree_deploys counter
+# HELP tree_deploys A count of how many times each variation of each tree has been deployed
+tree_deploys{tree_name="tree-planter",branch_name="master",repo_path="tree-planter",endpoint="deploy"} 3.0
+tree_deploys{tree_name="tree-planter",branch_name="master",repo_path="tree-planter___master",endpoint="gitlab"} 2.0
+# TYPE http_server_requests_total counter
+# HELP http_server_requests_total The total number of HTTP requests handled by the Rack application.
+http_server_requests_total{code="200",method="head",path="/"} 1.0
+http_server_requests_total{code="200",method="get",path="/metrics"} 3.0
+http_server_requests_total{code="200",method="post",path="/deploy"} 3.0
+http_server_requests_total{code="200",method="post",path="/gitlab"} 2.0
+```
+
 ### Triggering the `/deploy` endpoint via cURL
 
 ```bash
@@ -291,12 +313,85 @@ http://localhost/gitlab
 
 ## Development & Testing
 
+### Vagrant
+
 The repository contains a Vagrantfile that will allow you to fire up a CentOS 7 box that contains the Puppet agent. It builds and deploys the Docker image using the tools documented above. After it is up you can talk to the container in four ways:
 
 1. Run `curl` commands from inside the Vagrant box targeted at http://localhost
 2. Run `curl` or a similar command from the command prompt / terminal of your local computer targeted at http://localhost:8080
 3. Run `vagrant share` and then target an endpoint such as http://caring-orangutan-0713.vagrantshare.com/gitlab You can learn more about Vagrant Share [here][vs].
 4. Run [ngrok][ngrok] on your local computer by executing `./ngrok http 8080` and then targeting an endpoint such as http://2bf16064.ngrok.io/gitlab (adapt the URL based on ngrok's output)
+
+### Manual testing
+
+You can then easily rebuild and test your code by stopping the puppet-created service and using docker directly like so:
+
+```bash
+sudo systemctl stop docker-johnny_appleseed
+cd /vagrant
+docker build -t genebean/tree-planter .
+docker run --rm -p 80:8080 -v /home/vagrant/.ssh/vagrant_priv_key:/home/user/.ssh/id_rsa -v /home/vagrant/trees:/opt/trees -v /var/log/tree-planter:/var/www/tree-planter/log -e LOCAL_USER_ID=1000
+```
+
+Depending on your changes, you may also need to clean up what currently exists:
+
+```bash
+# clean most things
+docker system prune -f
+
+# clean all the things
+docker system prune -fa
+```
+
+### Validation
+
+Once you think everything is good you should re-run puppet to update its setup and then re-run the tests done during `vagrant up`:
+
+```bash
+sudo -i puppet apply /vagrant/docker.pp
+
+docker exec johnny_appleseed /bin/sh -c 'bundle exec rake test'
+
+sudo rm -rf /home/vagrant/trees/tree-planter*
+
+curl -H "Content-Type: application/json" -X POST -d \
+  '{"ref":"refs/heads/master", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
+  http://localhost:80/deploy
+
+curl -H "Content-Type: application/json" -X POST -d \
+  '{"ref":"refs/heads/master", "repository":{"name":"tree-planter", "url":"https://github.com/genebean/tree-planter.git" }}' \
+  http://localhost:80/gitlab
+
+ls -ld /home/vagrant/trees/
+
+ls -l /home/vagrant/trees/
+```
+
+Alternatively, you could simply run `vagrant destroy -f; vagrant up` to recreate the Vagrant environment from scratch as that will take care of performing a build in a clean environment and then running some basic tests.
+
+If all of that looks good you should also run `rubocop` against your local copy of the code. You can do that from inside Vagrant like so:
+
+```bash
+~ » docker run --rm -it --entrypoint='' -v /vagrant:/vagrant genebean/tree-planter \
+/bin/bash -c 'cd /vagrant; bundle exec rake rubocop'
+Running RuboCop...
+Inspecting 6 files
+......
+
+6 files inspected, no offenses detected
+Running RuboCop...
+Inspecting 6 files
+......
+
+6 files inspected, no offenses detected
+```
+
+Many errors that are may be returned can be fixed by running a variation of the command above that has `rake rubocop` replaced with `rake rubocop:auto_correct`.
+
+### Don't forget
+
+Lastly, be sure to check the output of the [`/metrics` endpoint](http://localhost:8080/metrics) if you have made any changes to the Prometheus metrics' code.
+
 
 [debian]: https://hub.docker.com/_/debian/
 [dependabot-img]: https://api.dependabot.com/badges/status?host=github&repo=genebean/tree-planter
