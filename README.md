@@ -8,7 +8,7 @@
 
 tree-planter is a webhook receiver that is designed to deploy code trees via either a simple JSON payload or the payload from a GitLab webhook. Cloned branches can also be deleted via a the GitLab webhook.
 
-Technology-wise, tree-planter is a Ruby application built on [Sinatra][sinatra]. The application is served up by the [Passenger][passenger] gem. All this has been neatly wrapped up in a Docker container that's based on the official [ruby:2.6-slim-buster][ruby] one which, in turn, is based on the official [debian:buster][debian] one. A utility called [gosu][gosu] is used for the entry point so that the application can run with a specified UID.
+Technology-wise, tree-planter is a Ruby application built on [Sinatra][sinatra]. The application is served up by the [Passenger][passenger] gem. All this has been neatly wrapped up in a Docker container that's based on the official [ruby:2.7-slim-buster][ruby] one which, in turn, is based on the official [debian:buster][debian] one. A utility called [gosu][gosu] is used for the entry point so that the application can run with a specified UID.
 
 - [File ownership / permissions](#file-ownership--permissions)
 - [Running the container](#running-the-container)
