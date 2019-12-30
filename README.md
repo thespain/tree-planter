@@ -314,6 +314,6 @@ The repository contains a Vagrantfile that will allow you to fire up a CentOS 7 
 [puppetlabs/docker]: https://forge.puppet.com/puppetlabs/docker
 [ruby]: https://hub.docker.com/_/ruby/
 [sinatra]: http://www.sinatrarb.com
-[travis-ci]: https://travis-ci.org/genebean/tree-planter
+[travis-ci]: https://travis-ci.com/genebean/tree-planter
 [travis-img-master]: https://img.shields.io/travis/genebean/tree-planter/master.svg
 [vs]: https://www.vagrantup.com/docs/share/http.html
