@@ -3,6 +3,7 @@
 require 'json'
 require 'logger'
 require 'open3'
+require 'prometheus/client'
 require 'sinatra/base'
 
 # This is my Sinatra app for planting trees
@@ -10,6 +11,21 @@ class TreePlanter < Sinatra::Base
   set :logging, true
 
   config_obj = JSON.parse(File.read(Dir.pwd + '/config.json'))
+
+  # rubocop:disable Layout/LineLength
+  prometheus = Prometheus::Client.registry
+  tree_deploy_counter = Prometheus::Client::Counter.new(
+    :tree_deploys,
+    docstring: 'A count of how many times each variation of each tree has been deployed',
+    labels: %i[
+      tree_name
+      branch_name
+      repo_path
+      endpoint
+    ]
+  )
+  prometheus.register(tree_deploy_counter)
+  # rubocop:enable Layout/LineLength
 
   get '/' do
     "<h1>Tree Planter</h1>
@@ -68,7 +84,7 @@ class TreePlanter < Sinatra::Base
     logger.info('')
 
     # rubocop:disable Layout/LineLength
-    deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
+    deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj, tree_deploy_counter)
     # rubocop:enable Layout/LineLength
   end
 
@@ -110,7 +126,7 @@ class TreePlanter < Sinatra::Base
       elsif after.eql?('0000000000000000000000000000000000000000') && checkout_sha.nil? # newer GitLab JSON Payload
         delete_branch(endpoint, repo_path, config_obj)
       else
-        deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
+        deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj, tree_deploy_counter)
       end
       # rubocop:enable Layout/LineLength
 
@@ -195,7 +211,7 @@ class TreePlanter < Sinatra::Base
   # rubocop:enable Metrics/AbcSize
 
   # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Layout/LineLength, Metrics/ParameterLists, Metrics/PerceivedComplexity
-  def deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj)
+  def deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj, tree_deploy_counter)
     # rubocop:enable Layout/LineLength, Metrics/ParameterLists
     base = config_obj['base_dir']
 
@@ -256,6 +272,13 @@ class TreePlanter < Sinatra::Base
             # body body_content
           end
         end # end Open3
+
+        tree_deploy_counter.increment(labels: {
+                                        tree_name: tree_name,
+                                        branch_name: branch_name,
+                                        repo_path: repo_path,
+                                        endpoint: endpoint
+                                      })
       else
         status 500
         msg = "#{base} cannot be found"
