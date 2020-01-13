@@ -6,7 +6,7 @@ GEM
     builder (3.2.4)
     jaro_winkler (1.5.4)
     json (2.3.0)
-    minitest (5.13.0)
+    minitest (5.14.0)
     minitest-reporters (1.4.2)
       ansi
       builder
@@ -52,7 +52,7 @@ PLATFORMS
 
 DEPENDENCIES
   json (~> 2.3)
-  minitest (~> 5.13)
+  minitest (~> 5.14)
   minitest-reporters (~> 1.4)
   passenger (~> 6.0, >= 6.0.2)
   prometheus-client (~> 1.0)
