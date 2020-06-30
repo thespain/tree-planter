@@ -21,7 +21,7 @@ GEM
       etc
       rack
       rake (>= 0.8.1)
-    prometheus-client (2.0.0)
+    prometheus-client (2.1.0)
     rack (2.2.3)
     rack-protection (2.0.8.1)
       rack
@@ -57,7 +57,7 @@ DEPENDENCIES
   minitest (~> 5.14)
   minitest-reporters (~> 1.4)
   passenger (~> 6.0)
-  prometheus-client (~> 2.0)
+  prometheus-client (~> 2.1)
   rack (~> 2.2)
   rack-test (~> 1.1)
   rubocop (~> 0.83)
