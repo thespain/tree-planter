@@ -5,6 +5,7 @@ AllCops:
   Exclude:
     - 'trees/**/*'
     - 'vendor/**/*'
+  NewCops: enable
 
 Layout/ClosingHeredocIndentation:
   Exclude:
