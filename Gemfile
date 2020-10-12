@@ -1,7 +1,7 @@
 source 'https://rubygems.org/'
 
 # App Stack
-gem 'json',      '~> 2.1'
+gem 'json',      '~> 2.3'
 gem 'passenger', '~> 5.1'
 gem 'sinatra',   '~> 1.4'
 
