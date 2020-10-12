@@ -17,11 +17,11 @@ GEM
       rack
       rake (>= 0.8.1)
     powerpack (0.1.1)
-    rack (1.6.5)
+    rack (1.6.13)
     rack-protection (1.5.3)
       rack
-    rack-test (0.6.3)
-      rack (>= 1.0)
+    rack-test (1.1.0)
+      rack (>= 1.0, < 3)
     rainbow (2.2.1)
     rake (12.0.0)
     rubocop (0.48.1)
@@ -46,7 +46,7 @@ DEPENDENCIES
   minitest (~> 5.10)
   minitest-reporters (~> 1.1)
   passenger (~> 5.1)
-  rack-test (~> 0.6)
+  rack-test (~> 1.1)
   rubocop (~> 0.48)
   sinatra (~> 1.4)
 
