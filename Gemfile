@@ -3,7 +3,7 @@ source 'https://rubygems.org/'
 # App Stack
 gem 'json',      '~> 2.1'
 gem 'passenger', '~> 5.1'
-gem 'sinatra',   '~> 1.4'
+gem 'sinatra',   '~> 2.1'
 
 group :development do
 end
