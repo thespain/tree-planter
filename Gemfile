@@ -8,6 +8,7 @@ gem 'passenger',         '~> 6.0'
 gem 'prometheus-client', '~> 2.1'
 gem 'rack',              '~> 2.2'
 gem 'sinatra',           '~> 2.0'
+gem 'pony',              '~> 1.13'
 
 group :development do
 end

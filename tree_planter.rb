@@ -5,6 +5,7 @@ require 'logger'
 require 'open3'
 require 'prometheus/client'
 require 'sinatra/base'
+require 'pony'
 
 # This is my Sinatra app for planting trees
 class TreePlanter < Sinatra::Base
@@ -202,6 +203,7 @@ class TreePlanter < Sinatra::Base
   def deploy_tree(endpoint, tree_name, branch_name, repo_url, repo_path, config_obj, tree_deploy_counter)
     # rubocop:enable Metrics/ParameterLists
     base = config_obj['base_dir']
+    email_body = ''
 
     stream do |body_content|
       body_content << "endpoint:  #{endpoint}\n"
@@ -244,8 +246,16 @@ class TreePlanter < Sinatra::Base
 
         Open3.popen2e(deploy_command) do |_stdin, stdout_err, wait_thr|
           # rubocop:disable Lint/AssignmentInCondition
+          email_body << "endpoint:  #{endpoint}\n"
+          email_body << "tree:      #{tree_name}\n"
+          email_body << "branch:    #{branch_name}\n"
+          email_body << "repo_url:  #{repo_url}\n"
+          email_body << "repo_path: #{repo_path}\n"
+          email_body << "base:      #{base}\n\n"
+          email_body << "Deploy command: #{deploy_command}\n\n"
           while line = stdout_err.gets
             body_content << line
+            email_body << line
             logger.info(line)
           end
           # rubocop:enable Lint/AssignmentInCondition
@@ -257,6 +267,14 @@ class TreePlanter < Sinatra::Base
           else
             status 500
             # body body_content
+            pony_email_options = config_obj['pony_email_options']
+            send_email_on_failure = config_obj['send_email_on_failure']
+            if send_email_on_failure
+              pony_email_defaults = { :body => "#{email_body}", :subject => 'Tree Planter Deployment Problem' }
+              pony_email_options_symbols = symbolize(pony_email_options)
+              pony_email_options_symbols = pony_email_defaults.merge(pony_email_options_symbols)
+              Pony.mail(pony_email_options_symbols)
+            end
           end
         end # end Open3
 
@@ -276,4 +294,18 @@ class TreePlanter < Sinatra::Base
   end
   # rubocop:enable Metrics/AbcSize
   # rubocop:enable Metrics/PerceivedComplexity
+
+  private
+
+  def symbolize(obj)
+    return obj.reduce({}) do |memo, (k, v)|
+      memo.tap { |m| m[k.to_sym] = symbolize(v) }
+    end if obj.is_a? Hash
+      
+    return obj.reduce([]) do |memo, v| 
+      memo << symbolize(v); memo
+    end if obj.is_a? Array
+    
+    obj
+  end
 end
