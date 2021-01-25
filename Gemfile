@@ -10,7 +10,7 @@ end
 
 group :test do
   gem 'minitest',           '~> 5.10'
-  gem 'minitest-reporters', '~> 1.1'
+  gem 'minitest-reporters', '~> 1.4'
   gem 'rack-test',          '~> 0.6'
   gem 'rubocop',            '~> 0.48'
 end
