@@ -5,7 +5,7 @@ GEM
     ast (2.3.0)
     builder (3.2.3)
     json (2.1.0)
-    minitest (5.10.1)
+    minitest (5.14.4)
     minitest-reporters (1.1.14)
       ansi
       builder
@@ -43,7 +43,7 @@ PLATFORMS
 
 DEPENDENCIES
   json (~> 2.1)
-  minitest (~> 5.10)
+  minitest (~> 5.14)
   minitest-reporters (~> 1.1)
   passenger (~> 5.1)
   rack-test (~> 0.6)
