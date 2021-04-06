@@ -1,4 +1,4 @@
-FROM ruby:2.4-slim
+FROM ruby:3.0.1-slim
 
 LABEL maintainer "gene@technicalissues.us"
 
